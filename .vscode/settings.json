@@ -1,12 +1,12 @@
 {
     "[javascript]": {
-        "editor.formatOnSave": false
+        "editor.formatOnSave": true
     },
     "[json]": {
         "editor.formatOnSave": true
     },
     "[typescript]": {
-        "editor.formatOnSave": false
+        "editor.formatOnSave": true
     },
     "editor.codeActionsOnSave": {
         "source.fixAll.eslint": true
@@ -16,6 +16,9 @@
     "files.encoding": "utf8",
     "files.insertFinalNewline": true,
     "files.trimTrailingWhitespace": true,
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false,
     "search.exclude": {
         "_book/**": true,
         ".rpt2_cache/**": true,
@@ -23,6 +26,5 @@
         "node_modules/**": true,
         "typings/**": true
     },
-    "typescript.tsdk": "./node_modules/typescript/lib",
-    "eslint.enable": true
+    "typescript.tsdk": "./node_modules/typescript/lib"
 }
