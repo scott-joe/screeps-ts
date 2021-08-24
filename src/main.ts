@@ -63,20 +63,20 @@ export const loop = ErrorMapper.wrapLoop(() => {
         census[role].cur += 1
 
         switch (role) {
-          case CreepRole.HARVESTER:
-            harvester.run(creep)
-            break;
-          case CreepRole.BUILDER:
-            builder.run(creep)
-            break;
-          case CreepRole.UPGRADER:
-            upgrader.run(creep)
-            break;
-          case CreepRole.SOLDIER:
-            // upgrader.run(creep)
-            break;
-          default:
-            break;
+            case CreepRole.HARVESTER:
+                harvester.run(creep)
+                break
+            case CreepRole.BUILDER:
+                builder.run(creep)
+                break
+            case CreepRole.UPGRADER:
+                upgrader.run(creep)
+                break
+            case CreepRole.SOLDIER:
+                // upgrader.run(creep)
+                break
+            default:
+                break
         }
     }
 
@@ -92,13 +92,14 @@ export const loop = ErrorMapper.wrapLoop(() => {
         const structure: Structure = structures[id]
 
         switch (structure.structureType) {
-          case STRUCTURE_TOWER:
-            guard.run(structure)
-            break;
+            case STRUCTURE_TOWER:
+                guard.run(structure)
+                break
 
-          default:
-            break;
+            default:
+                break
         }
+
         console.log(`structure.id: ${structure.id}`)
     }
 

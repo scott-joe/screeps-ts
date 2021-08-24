@@ -2,28 +2,28 @@ export default {
     env: {
         browser: true,
         es6: true,
-        node: true,
+        node: true
     },
     settings: {
         'import/parsers': {
-            '@typescript-eslint/parser': ['.ts', '.tsx'],
+            '@typescript-eslint/parser': ['.ts', '.tsx']
         },
         'import/resolver': {
-            typescript: {},
-        },
+            typescript: {}
+        }
     },
     parser: '@typescript-eslint/parser',
     parserOptions: {
         project: 'tsconfig.json',
         sourceType: 'module',
         ecmaFeatures: {
-            jsx: false,
+            jsx: false
             // globalReturn: false
         },
         ecmaVersion: '2020',
         lib: ['es2020'],
         project: './tsconfig.json',
-        'warnOnUnsupportedTypeScriptVersion': true
+        warnOnUnsupportedTypeScriptVersion: true
     },
     plugins: ['@typescript-eslint', 'import'],
     extends: [
@@ -33,7 +33,7 @@ export default {
         'plugin:prettier/recommended',
         'plugin:import/errors',
         'plugin:import/warnings',
-        'plugin:import/typescript',
+        'plugin:import/typescript'
     ],
     rules: {
         '@typescript-eslint/array-type': 'error',
@@ -43,25 +43,25 @@ export default {
         '@typescript-eslint/explicit-member-accessibility': [
             'error',
             {
-                accessibility: 'explicit',
-            },
+                accessibility: 'explicit'
+            }
         ],
         '@typescript-eslint/no-explicit-any': 'off',
         '@typescript-eslint/no-parameter-properties': 'off',
         '@typescript-eslint/no-unused-expressions': 'error',
         '@typescript-eslint/no-use-before-define': [
             'error',
-            { functions: false },
+            { functions: false }
         ],
         '@typescript-eslint/prefer-for-of': 'error',
         '@typescript-eslint/space-within-parens': ['off', 'never'],
         '@typescript-eslint/unified-signatures': 'error',
         'arrow-parens': ['off', 'as-needed'],
-        'camelcase': 'error',
-        'complexity': 'off',
+        camelcase: 'error',
+        complexity: 'off',
         'dot-notation': 'error',
         'eol-last': 'off',
-        'eqeqeq': ['error', 'smart'],
+        eqeqeq: ['error', 'smart'],
         'guard-for-in': 'off',
         'id-blacklist': [
             'error',
@@ -72,7 +72,7 @@ export default {
             'string',
             'Boolean',
             'boolean',
-            'Undefined',
+            'Undefined'
         ],
         'id-match': 'error',
         'linebreak-style': 'off',
@@ -90,8 +90,8 @@ export default {
         'no-shadow': [
             'error',
             {
-                hoist: 'all',
-            },
+                hoist: 'all'
+            }
         ],
         'no-throw-literal': 'error',
         'no-trailing-spaces': 'off',
@@ -101,9 +101,9 @@ export default {
         'object-shorthand': 'error',
         'one-var': ['error', 'never'],
         'quote-props': 'off',
-        'radix': 'error',
+        radix: 'error',
         'sort-imports': 'warn',
         'spaced-comment': 'error',
         'no-underscore-dangle': 'off'
-    },
+    }
 }

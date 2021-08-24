@@ -5,7 +5,8 @@ export class ErrorMapper {
     private static _consumer?: SourceMapConsumer
 
     public static get consumer(): SourceMapConsumer {
-        this._consumer = this._consumer || new SourceMapConsumer(require('main.js.map'))
+        this._consumer =
+            this._consumer || new SourceMapConsumer(require('main.js.map'))
         return this._consumer
     }
 
@@ -37,7 +38,7 @@ export class ErrorMapper {
             if (match[2] === 'main') {
                 const pos = this.consumer.originalPositionFor({
                     column: parseInt(match[4], 10),
-                    line: parseInt(match[3], 10),
+                    line: parseInt(match[3], 10)
                 })
 
                 if (pos.line != null) {
