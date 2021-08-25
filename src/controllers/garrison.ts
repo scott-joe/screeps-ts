@@ -1,4 +1,5 @@
 import { type } from 'os'
+import { exit } from 'process'
 import {
     Census,
     CensusStatus,
@@ -23,6 +24,7 @@ export default {
                         // TODO: Get body from constants/enums
                         const body = creepRecipes[role].SM
                         spawn.spawnCreep(body, name, { memory: { role: role } })
+                        return
                     }
                 })
             }
