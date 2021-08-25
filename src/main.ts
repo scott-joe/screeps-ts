@@ -60,7 +60,6 @@ export const loop = ErrorMapper.wrapLoop(() => {
         // console.log(`creep.id: ${creep.id}`)
 
         const role: CreepRole = creep.memory.role as CreepRole
-        console.log(role)
         census[role].cur += 1
 
         switch (role) {
