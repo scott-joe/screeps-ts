@@ -49,12 +49,13 @@ export const loop = ErrorMapper.wrapLoop(() => {
     //       Based on room? Do this whole loop per room? Or operate the whole thing together
     const census: any = {
         HARVESTER: { min: 3, cur: 0, list: [] },
-        BUILDER: { min: 3, cur: 0, list: [] },
-        UPGRADER: { min: 3, cur: 0, list: [] },
-        SOLDIER: { min: 3, cur: 0, list: [] }
+        BUILDER: { min: 2, cur: 0, list: [] },
+        UPGRADER: { min: 1, cur: 0, list: [] },
+        SOLDIER: { min: 1, cur: 0, list: [] }
     }
 
     // Creep role actions
+    let spawnBusy = false
     for (const name in creeps) {
         const creep = creeps[name]
         const role: CreepRole = creep.memory.role as CreepRole
@@ -63,9 +64,7 @@ export const loop = ErrorMapper.wrapLoop(() => {
         switch (role) {
             case CreepRole.HARVESTER:
                 harvester.run(creep)
-                census[role].list.push(creep)
-                if (census[role].cur < census[role].min)
-                    garrison.new(Game.spawns[0], role)
+                // census[role].list.push(creep)
                 break
             case CreepRole.BUILDER:
                 builder.run(creep)
@@ -79,6 +78,9 @@ export const loop = ErrorMapper.wrapLoop(() => {
             default:
                 break
         }
+
+        if (!spawnBusy && census[role].cur < census[role].min)
+            garrison.new(Game.spawns[0], role)
     }
 
     // Creep management (e.g., numbers and spawning)
