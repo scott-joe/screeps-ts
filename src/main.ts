@@ -47,11 +47,16 @@ export const loop = ErrorMapper.wrapLoop(() => {
     // TODO: Based on Controller level? Total energy available? LVL of each role to x1 x2 x3... roles
     //       Based on need? Change roles based on what's needed and keep everyone fairly generlized
     //       Based on room? Do this whole loop per room? Or operate the whole thing together
-    const census: Array<{ role: CreepRole; min: number; cur: number }> = [
-        { role: CreepRole.HARVESTER, min: 3, cur: 0 },
-        { role: CreepRole.BUILDER, min: 3, cur: 0 },
-        { role: CreepRole.UPGRADER, min: 3, cur: 0 },
-        { role: CreepRole.SOLDIER, min: 3, cur: 0 }
+    const census: Array<{
+        role: CreepRole
+        min: number
+        cur: number
+        list: Array<Creep>
+    }> = [
+        { role: CreepRole.HARVESTER, min: 3, cur: 0, list: [] },
+        { role: CreepRole.BUILDER, min: 3, cur: 0, list: [] },
+        { role: CreepRole.UPGRADER, min: 3, cur: 0, list: [] },
+        { role: CreepRole.SOLDIER, min: 3, cur: 0, list: [] }
     ]
 
     // Creep role actions
@@ -66,6 +71,9 @@ export const loop = ErrorMapper.wrapLoop(() => {
         switch (thisCreepRole) {
             case CreepRole.HARVESTER:
                 harvester.run(creep)
+                if (censusEntry.cur < censusEntry.min) {
+                    garrison.new(Game.spawns[0], censusEntry.role)
+                }
                 break
             case CreepRole.BUILDER:
                 builder.run(creep)
@@ -82,11 +90,11 @@ export const loop = ErrorMapper.wrapLoop(() => {
     }
 
     // Creep management (e.g., numbers and spawning)
-    for (const id in spawns) {
-        const spawn = spawns[id]
-        garrison.run(spawn, census)
-        // console.log(`spawn.id: ${spawn.id}`)
-    }
+    // for (const id in spawns) {
+    //     const spawn = spawns[id]
+    //     garrison.new(spawn, role)
+    //     // console.log(`spawn.id: ${spawn.id}`)
+    // }
 
     // Towers do tower things, and so on
     // for (const id in structures) {
