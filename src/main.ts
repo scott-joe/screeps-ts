@@ -47,12 +47,12 @@ export const loop = ErrorMapper.wrapLoop(() => {
     // TODO: Based on Controller level? Total energy available? LVL of each role to x1 x2 x3... roles
     //       Based on need? Change roles based on what's needed and keep everyone fairly generlized
     //       Based on room? Do this whole loop per room? Or operate the whole thing together
-    const census: any = new Map([
-        [CreepRole.HARVESTER, { min: 3, cur: 0 }],
-        [CreepRole.BUILDER, { min: 1, cur: 0 }],
-        [CreepRole.UPGRADER, { min: 1, cur: 0 }],
-        [CreepRole.SOLDIER, { min: 2, cur: 0 }]
-    ])
+    const census: any = {
+        HARVESTER: { min: 3, cur: 0 },
+        BUILDER: { min: 1, cur: 0 },
+        UPGRADER: { min: 1, cur: 0 },
+        SOLDIER: { min: 2, cur: 0 }
+    }
 
     // Creep role actions
     for (const name in creeps) {
