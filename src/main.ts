@@ -47,33 +47,25 @@ export const loop = ErrorMapper.wrapLoop(() => {
     // TODO: Based on Controller level? Total energy available? LVL of each role to x1 x2 x3... roles
     //       Based on need? Change roles based on what's needed and keep everyone fairly generlized
     //       Based on room? Do this whole loop per room? Or operate the whole thing together
-    const census: Array<{
-        role: CreepRole
-        min: number
-        cur: number
-        list: Array<Creep>
-    }> = [
-        { role: CreepRole.HARVESTER, min: 3, cur: 0, list: [] },
-        { role: CreepRole.BUILDER, min: 3, cur: 0, list: [] },
-        { role: CreepRole.UPGRADER, min: 3, cur: 0, list: [] },
-        { role: CreepRole.SOLDIER, min: 3, cur: 0, list: [] }
-    ]
+    const census: any = {
+        HARVESTER: { min: 3, cur: 0, list: [] },
+        BUILDER: { min: 3, cur: 0, list: [] },
+        UPGRADER: { min: 3, cur: 0, list: [] },
+        SOLDIER: { min: 3, cur: 0, list: [] }
+    }
 
     // Creep role actions
     for (const name in creeps) {
         const creep = creeps[name]
-        const thisCreepRole: CreepRole = creep.memory.role as CreepRole
-        const censusEntry = census.filter(
-            entry => entry.role === thisCreepRole
-        )[0]
-        censusEntry.cur += 1
+        const role: CreepRole = creep.memory.role as CreepRole
+        census[role].cur++
 
-        switch (thisCreepRole) {
+        switch (role) {
             case CreepRole.HARVESTER:
                 harvester.run(creep)
-                if (censusEntry.cur < censusEntry.min) {
-                    garrison.new(Game.spawns[0], censusEntry.role)
-                }
+                census[role].list.push(creep)
+                if (census[role].cur < census[role].min)
+                    garrison.new(Game.spawns[0], role)
                 break
             case CreepRole.BUILDER:
                 builder.run(creep)
