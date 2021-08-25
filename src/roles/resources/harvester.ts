@@ -1,6 +1,6 @@
 export default {
     run(creep: Creep) {
-        console.log('creep running')
+        console.log(creep.store.getFreeCapacity())
         // If there's room, go harvest more
         if (creep.store.getFreeCapacity() > 0) {
             const sources = creep.room.find(FIND_SOURCES)

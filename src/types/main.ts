@@ -3,18 +3,18 @@ export type CensusStatus = {
     cur: number
 }
 
-export interface Census {
-    HARVESTER: CensusStatus
-    BUILDER: CensusStatus
-    UPGRADER: CensusStatus
-    SOLDIER: CensusStatus
-}
-
 export enum CreepRole {
     HARVESTER = 'HARVESTER',
     BUILDER = 'BUILDER',
     UPGRADER = 'UPGRADER',
     SOLDIER = 'SOLDIER'
+}
+
+export interface Census {
+    HARVESTER: CensusStatus
+    BUILDER: CensusStatus
+    UPGRADER: CensusStatus
+    SOLDIER: CensusStatus
 }
 
 export enum Division {

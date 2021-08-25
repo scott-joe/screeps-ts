@@ -1,25 +1,19 @@
 import { type } from 'os'
-import { Census, CreepRole } from 'types/main'
+import { Census, CreepRole, Division } from 'types/main'
 
 export default {
     run: (spawn: StructureSpawn, census: Census): void => {
-        // if not actively spawning creep
-        // if (!spawn.spawning) {
-        //     for (const type in census) {
-        //         // const { BUILDER } = CreepRole
-        //         // const type = CreepRole.BUILDER]
-        //         switch (type) {
-        //             case CreepRole.BUILDER:
-        //                 if census[type].cur < census[type].min
-        //                 const name = `${CreepRole[type]-${Game.time}}
-        //                 const opts = { memory: { role: CreepRole[type] } }
-        //                 spawn.spawnCreep(body, name, opts)
-        //                 break;
-        //             default:
-        //                 break;
-        //         }
-        //         // TODO: Get body from constants/enums
-        //     }
-        // }
+        // if not actively spawning
+        if (!spawn.spawning) {
+            for (const t in census) {
+                const ROLE = t as CreepRole
+                if (census[ROLE].cur < census[ROLE].min) {
+                    const name: string = `${ROLE}-${Game.time}`
+                    // TODO: Get body from constants/enums
+                    const body: Array<BodyPartConstant> = [WORK, CARRY, MOVE]
+                    spawn.spawnCreep(body, name, { memory: { role: ROLE } })
+                }
+            }
+        }
     }
 }

@@ -19,12 +19,12 @@ declare global {
     }
 
     interface CreepMemory {
-        room: string
+        room?: string
         role: CreepRole
-        division: Division
-        working: boolean
-        building: boolean
-        upgrading: boolean
+        division?: Division
+        working?: boolean
+        building?: boolean
+        upgrading?: boolean
     }
 
     // Syntax for adding proprties to `global` (ex "global.log")
@@ -73,7 +73,7 @@ export const loop = ErrorMapper.wrapLoop(() => {
                 upgrader.run(creep)
                 break
             case CreepRole.SOLDIER:
-                // upgrader.run(creep)
+                // soldier.run(creep)
                 break
             default:
                 break
@@ -81,11 +81,11 @@ export const loop = ErrorMapper.wrapLoop(() => {
     }
 
     // Creep management (e.g., numbers and spawning)
-    // for (const id in spawns) {
-    //     const spawn = spawns[id]
-    //     // garrison.run(spawn, census)
-    //     // console.log(`spawn.id: ${spawn.id}`)
-    // }
+    for (const id in spawns) {
+        const spawn = spawns[id]
+        garrison.run(spawn, census)
+        // console.log(`spawn.id: ${spawn.id}`)
+    }
 
     // Towers do tower things, and so on
     // for (const id in structures) {
