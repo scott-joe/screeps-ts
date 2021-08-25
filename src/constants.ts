@@ -1,6 +1,7 @@
 import { CreepRecipe, Size } from 'types/main'
 
 export const creepSize = Size.SM
+export const minEnergy = 300
 
 export const creepRecipes: CreepRecipe = {
     HARVESTER: {
