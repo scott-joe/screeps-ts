@@ -48,10 +48,10 @@ export const loop = ErrorMapper.wrapLoop(() => {
     //       Based on need? Change roles based on what's needed and keep everyone fairly generlized
     //       Based on room? Do this whole loop per room? Or operate the whole thing together
     const census: any = new Map([
-        ['HARVESTER', { min: 3, cur: 0 }],
-        ['BUILDER', { min: 1, cur: 0 }],
-        ['UPGRADER', { min: 1, cur: 0 }],
-        ['SOLDIER', { min: 2, cur: 0 }]
+        [CreepRole.HARVESTER, { min: 3, cur: 0 }],
+        [CreepRole.BUILDER, { min: 1, cur: 0 }],
+        [CreepRole.UPGRADER, { min: 1, cur: 0 }],
+        [CreepRole.SOLDIER, { min: 2, cur: 0 }]
     ])
 
     // Creep role actions
