@@ -15,7 +15,6 @@ export default {
             // TODO: spawn.renewCreep
             if (spawn.store.energy >= minEnergy) {
                 // Check if creeps are needed
-                // for (const t in census) {
                 census.forEach((member: any) => {
                     if (member.cur < member.min) {
                         const role = member.role as CreepRole
@@ -25,8 +24,6 @@ export default {
                         spawn.spawnCreep(body, name, { memory: { role: role } })
                     }
                 })
-                // const ROLE = t as CreepRole
-                // }
             }
         }
     }
