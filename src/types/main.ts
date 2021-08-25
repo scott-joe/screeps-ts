@@ -10,11 +10,12 @@ export enum CreepRole {
     SOLDIER = 'SOLDIER'
 }
 
+// export type Census = {
+//     [property in CreepRole]: CensusStatus
+// }
+
 export interface Census {
-    HARVESTER: CensusStatus
-    BUILDER: CensusStatus
-    UPGRADER: CensusStatus
-    SOLDIER: CensusStatus
+	[x: string]: { min: number, cur: number }
 }
 
 export enum Division {
@@ -28,4 +29,16 @@ export enum Strategy {
     RAID = 'RAID',
     CLOISTER = 'CLOISTER',
     ENTERPRISE = 'ENTERPRISE'
+}
+
+export enum Size {
+    SM = 'SM',
+    MED = 'MED',
+    LG = 'LG'
+}
+
+export type CreepRecipe = {
+    [property in CreepRole]: {
+        [property in Size]: Array<BodyPartConstant>
+    }
 }

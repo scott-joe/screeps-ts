@@ -1,6 +1,6 @@
 import { garrison, guard } from 'controllers'
 import { builder, harvester, upgrader } from 'roles'
-import { Census, CreepRole, Division } from 'types/main'
+import { Census, CensusStatus, CreepRole, Division } from 'types/main'
 import { ErrorMapper } from 'utils/ErrorMapper'
 
 declare global {
@@ -47,20 +47,23 @@ export const loop = ErrorMapper.wrapLoop(() => {
     // TODO: Based on Controller level? Total energy available? LVL of each role to x1 x2 x3... roles
     //       Based on need? Change roles based on what's needed and keep everyone fairly generlized
     //       Based on room? Do this whole loop per room? Or operate the whole thing together
-    const census: Census = {
-        HARVESTER: { min: 3, cur: 0 },
-        BUILDER: { min: 1, cur: 0 },
-        UPGRADER: { min: 1, cur: 0 },
-        SOLDIER: { min: 2, cur: 0 }
-    }
+    const census: any = new Map([
+        ['HARVESTER', { min: 3, cur: 0 }],
+        ['BUILDER', { min: 1, cur: 0 }],
+        ['UPGRADER', { min: 1, cur: 0 }],
+        ['SOLDIER', { min: 2, cur: 0 }]
+    ])
 
     // Creep role actions
     for (const name in creeps) {
         const creep = creeps[name]
-        // console.log(`creep.id: ${creep.id}`)
-
         const role: CreepRole = creep.memory.role as CreepRole
-        census[role].cur += 1
+        const censusStatus = census.get(role)
+
+        const count = Object.assign(censusStatus, {
+            cur: 1 + (censusStatus?.cur || 1)
+        })
+        census.set(role, count)
 
         switch (role) {
             case CreepRole.HARVESTER:

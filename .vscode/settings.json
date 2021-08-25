@@ -27,5 +27,6 @@
         "typings/**": true
     },
     "typescript.tsdk": "./node_modules/typescript/lib",
-    "prettier.tabWidth": 4
+	"prettier.tabWidth": 4,
+	"files.autoSave": "afterDelay"
 }
