@@ -18,6 +18,7 @@ export default {
                 census.forEach((member: any) => {
                     if (member.cur < member.min) {
                         const role = member.role as CreepRole
+                        console.log('building a ' + role)
                         const name: string = `${role}-${Game.time}`
                         // TODO: Get body from constants/enums
                         const body = creepRecipes[role].SM
