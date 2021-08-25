@@ -13,7 +13,7 @@ export default {
         // if not actively spawning
         if (!spawn.spawning) {
             // TODO: spawn.renewCreep
-            if (spawn.store.energy > 300) {
+            if (spawn.store.energy >= 300) {
                 // Check if creeps are needed
                 for (const t in census) {
                     const ROLE = t as CreepRole
