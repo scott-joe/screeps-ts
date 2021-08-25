@@ -57,7 +57,7 @@ export const loop = ErrorMapper.wrapLoop(() => {
     // Creep role actions
     for (const name in creeps) {
         const creep = creeps[name]
-        console.log(`creep.id: ${creep.id}`)
+        // console.log(`creep.id: ${creep.id}`)
 
         const role: CreepRole = creep.memory.role as CreepRole
         census[role].cur += 1
@@ -83,8 +83,8 @@ export const loop = ErrorMapper.wrapLoop(() => {
     // Creep management (e.g., numbers and spawning)
     for (const id in spawns) {
         const spawn = spawns[id]
-        // garrison.run(spawn, census)
-        console.log(`spawn.id: ${spawn.id}`)
+        garrison.run(spawn, census)
+        // console.log(`spawn.id: ${spawn.id}`)
     }
 
     // Towers do tower things, and so on
@@ -100,7 +100,7 @@ export const loop = ErrorMapper.wrapLoop(() => {
                 break
         }
 
-        console.log(`structure.id: ${structure.id}`)
+        // console.log(`structure.id: ${structure.id}`)
     }
 
     // Memory cleanup
