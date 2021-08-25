@@ -81,27 +81,27 @@ export const loop = ErrorMapper.wrapLoop(() => {
     }
 
     // Creep management (e.g., numbers and spawning)
-    for (const id in spawns) {
-        const spawn = spawns[id]
-        garrison.run(spawn, census)
-        // console.log(`spawn.id: ${spawn.id}`)
-    }
+    // for (const id in spawns) {
+    //     const spawn = spawns[id]
+    //     // garrison.run(spawn, census)
+    //     // console.log(`spawn.id: ${spawn.id}`)
+    // }
 
     // Towers do tower things, and so on
-    for (const id in structures) {
-        const structure: Structure = structures[id]
+    // for (const id in structures) {
+    //     const structure: Structure = structures[id]
 
-        switch (structure.structureType) {
-            case STRUCTURE_TOWER:
-                guard.run(structure)
-                break
+    //     switch (structure.structureType) {
+    //         case STRUCTURE_TOWER:
+    //             guard.run(structure)
+    //             break
 
-            default:
-                break
-        }
+    //         default:
+    //             break
+    //     }
 
-        // console.log(`structure.id: ${structure.id}`)
-    }
+    //     // console.log(`structure.id: ${structure.id}`)
+    // }
 
     // Memory cleanup
     for (const name in Memory.creeps) {
