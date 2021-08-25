@@ -58,9 +58,10 @@ export const loop = ErrorMapper.wrapLoop(() => {
     for (const name in creeps) {
         const creep = creeps[name]
         const thisCreepRole: CreepRole = creep.memory.role as CreepRole
-        const censusStatus = census.filter(
+        const censusEntry = census.filter(
             entry => entry.role === thisCreepRole
-        )
+        )[0]
+        censusEntry.cur += 1
 
         switch (thisCreepRole) {
             case CreepRole.HARVESTER:
