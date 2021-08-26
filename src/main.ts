@@ -52,7 +52,6 @@ export const loop = ErrorMapper.wrapLoop(() => {
     Memory.census = Memory.census || censusConfig
 
     // Creep role actions
-    let spawnBusy = false
     for (const name in creeps) {
         const creep = creeps[name]
         const role: CreepRole = creep.memory.role as CreepRole

@@ -1,20 +1,13 @@
-import { type } from 'os'
-import { exit } from 'process'
-import {
-    Census,
-    CensusStatus,
-    CreepRecipe,
-    CreepRole,
-    Division
-} from 'types/main'
+import { CreepRole } from 'types/main'
 import { creepRecipes, creepSize, minEnergy } from '../constants'
 
 export default {
     run: (spawn: StructureSpawn): void => {
+        let busy = false
         // if not actively spawning
         if (!spawn.spawning) {
             // TODO: spawn.renewCreep
-            if (spawn.store.energy >= minEnergy) {
+            if (!busy && spawn.store.energy >= minEnergy) {
                 // Check if creeps are needed
                 for (const role in Memory.census) {
                     const creepRole = role as CreepRole
@@ -27,6 +20,7 @@ export default {
                         spawn.spawnCreep(body, name, {
                             memory: { role: creepRole }
                         })
+                        busy = true
                     }
                 }
             }
