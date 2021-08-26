@@ -40,7 +40,7 @@ declare global {
 
 export const loop = ErrorMapper.wrapLoop(() => {
     // Timepiece
-    console.log(`Current game tick is ${Game.time}`)
+    // console.log(`Current game tick is ${Game.time}`)
 
     const spawns: { [spawnName: string]: StructureSpawn } = Game.spawns
     const creeps: { [creepName: string]: Creep } = Game.creeps

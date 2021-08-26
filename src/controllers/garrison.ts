@@ -42,7 +42,7 @@ export default {
             const newCreepName = spawn.spawning.name
             const newCreep = Game.creeps[newCreepName]
             spawn.room.visual.text(
-                '🛠️' + newCreep.memory.role,
+                `🛠️ ${newCreepName}`,
                 spawn.pos.x + 1,
                 spawn.pos.y,
                 { align: 'left', opacity: 0.8 }
