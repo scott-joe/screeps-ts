@@ -1,27 +1,43 @@
 import { CreepRole } from 'types/main'
 import { creepRecipes, creepSize, minEnergy } from '../constants'
 
+const shouldSpawn = (role: CreepRole): boolean => {
+    return Memory.census[role].cur < Memory.census[role].min
+}
+
+const spawnCreep = (spawn: StructureSpawn, role: CreepRole): void => {
+    console.log('building a ' + role)
+    const name: string = `${role}-${Game.time}`
+    // TODO: Get body from constants/enums
+    const body = creepRecipes[role].SM
+    spawn.spawnCreep(body, name, {
+        memory: { role }
+    })
+}
+
 export default {
     run: (spawn: StructureSpawn): void => {
-        let busy = false
+        const census = Memory.census
         // if not actively spawning
         if (!spawn.spawning) {
             // TODO: spawn.renewCreep
-            if (!busy && spawn.store.energy >= minEnergy) {
+            if (spawn.store.energy >= minEnergy) {
                 // Check if creeps are needed
-                for (const role in Memory.census) {
-                    const creepRole = role as CreepRole
-                    const member = Memory.census[role]
-                    if (member.cur < member.min) {
-                        console.log('building a ' + role)
-                        const name: string = `${role}-${Game.time}`
-                        // TODO: Get body from constants/enums
-                        const body = creepRecipes[creepRole].SM
-                        spawn.spawnCreep(body, name, {
-                            memory: { role: creepRole }
-                        })
-                        busy = true
-                    }
+                switch (true) {
+                    case shouldSpawn(CreepRole.HARVESTER):
+                        spawnCreep(spawn, CreepRole.HARVESTER)
+                        break
+                    case shouldSpawn(CreepRole.UPGRADER):
+                        spawnCreep(spawn, CreepRole.UPGRADER)
+                        break
+                    case shouldSpawn(CreepRole.BUILDER):
+                        spawnCreep(spawn, CreepRole.BUILDER)
+                        break
+                    case shouldSpawn(CreepRole.SOLDIER):
+                        spawnCreep(spawn, CreepRole.SOLDIER)
+                        break
+                    default:
+                        break
                 }
             }
         }

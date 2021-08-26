@@ -17,7 +17,7 @@ declare global {
     interface Memory {
         uuid: number
         log: any
-        census?: { [x: string]: { min: number; cur: number } }
+        census: { [x: string]: { min: number; cur: number } }
     }
 
     interface CreepMemory {
