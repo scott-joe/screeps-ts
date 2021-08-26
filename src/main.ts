@@ -42,7 +42,7 @@ export const loop = ErrorMapper.wrapLoop(() => {
     // Timepiece
     console.log(`Current game tick is ${Game.time}`)
 
-    // const spawns: { [spawnName: string]: StructureSpawn } = Game.spawns
+    const spawns: { [spawnName: string]: StructureSpawn } = Game.spawns
     const creeps: { [creepName: string]: Creep } = Game.creeps
     // const structures: { [structureName: string]: Structure } = Game.structures
 
@@ -77,7 +77,7 @@ export const loop = ErrorMapper.wrapLoop(() => {
         }
 
         if (!spawnBusy && Memory.census[role].cur < Memory.census[role].min) {
-            garrison.new(Game.spawns[0], role)
+            garrison.new(spawns['Spawn-1'], role)
         }
     }
 
