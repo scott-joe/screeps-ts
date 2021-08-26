@@ -6,7 +6,6 @@ const shouldSpawn = (role: CreepRole): boolean => {
 }
 
 const spawnCreep = (spawn: StructureSpawn, role: CreepRole): void => {
-    console.log('building a ' + role)
     const name: string = `${role}-${Game.time}`
     // TODO: Get body from constants/enums
     const body = creepRecipes[role].SM
@@ -17,7 +16,6 @@ const spawnCreep = (spawn: StructureSpawn, role: CreepRole): void => {
 
 export default {
     run: (spawn: StructureSpawn): void => {
-        const census = Memory.census
         // if not actively spawning
         if (!spawn.spawning) {
             // TODO: spawn.renewCreep
@@ -40,6 +38,15 @@ export default {
                         break
                 }
             }
+        } else {
+            const newCreepName = spawn.spawning.name
+            const newCreep = Game.creeps[newCreepName]
+            spawn.room.visual.text(
+                '🛠️' + newCreep.memory.role,
+                spawn.pos.x + 1,
+                spawn.pos.y,
+                { align: 'left', opacity: 0.8 }
+            )
         }
     }
 }
