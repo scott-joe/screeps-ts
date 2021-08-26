@@ -75,18 +75,13 @@ export const loop = ErrorMapper.wrapLoop(() => {
             default:
                 break
         }
-
-        if (!spawnBusy && Memory.census[role].cur < Memory.census[role].min) {
-            garrison.new(spawns['Spawn-1'], role)
-        }
     }
 
     // Creep management (e.g., numbers and spawning)
-    // for (const id in spawns) {
-    //     const spawn = spawns[id]
-    //     garrison.new(spawn, role)
-    //     // console.log(`spawn.id: ${spawn.id}`)
-    // }
+    for (const id in spawns) {
+        const spawn = spawns[id]
+        garrison.run(spawn)
+    }
 
     // Towers do tower things, and so on
     // for (const id in structures) {
