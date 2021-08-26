@@ -1,3 +1,4 @@
+import { censusConfig } from './constants'
 import { garrison, guard } from 'controllers'
 import { builder, harvester, upgrader } from 'roles'
 import { Census, CensusStatus, CreepRole, Division } from 'types/main'
@@ -16,6 +17,7 @@ declare global {
     interface Memory {
         uuid: number
         log: any
+        census?: { [x: string]: { min: number; cur: number } }
     }
 
     interface CreepMemory {
@@ -40,26 +42,21 @@ export const loop = ErrorMapper.wrapLoop(() => {
     // Timepiece
     console.log(`Current game tick is ${Game.time}`)
 
-    const spawns: { [spawnName: string]: StructureSpawn } = Game.spawns
+    // const spawns: { [spawnName: string]: StructureSpawn } = Game.spawns
     const creeps: { [creepName: string]: Creep } = Game.creeps
-    const structures: { [structureName: string]: Structure } = Game.structures
+    // const structures: { [structureName: string]: Structure } = Game.structures
 
     // TODO: Based on Controller level? Total energy available? LVL of each role to x1 x2 x3... roles
     //       Based on need? Change roles based on what's needed and keep everyone fairly generlized
     //       Based on room? Do this whole loop per room? Or operate the whole thing together
-    const census: any = {
-        HARVESTER: { min: 3, cur: 0, list: [] },
-        BUILDER: { min: 2, cur: 0, list: [] },
-        UPGRADER: { min: 1, cur: 0, list: [] },
-        SOLDIER: { min: 1, cur: 0, list: [] }
-    }
+    Memory.census = Memory.census || censusConfig
 
     // Creep role actions
     let spawnBusy = false
     for (const name in creeps) {
         const creep = creeps[name]
         const role: CreepRole = creep.memory.role as CreepRole
-        census[role].cur++
+        Memory.census[role].cur += 1
 
         switch (role) {
             case CreepRole.HARVESTER:
@@ -79,8 +76,9 @@ export const loop = ErrorMapper.wrapLoop(() => {
                 break
         }
 
-        if (!spawnBusy && census[role].cur < census[role].min)
+        if (!spawnBusy && Memory.census[role].cur < Memory.census[role].min) {
             garrison.new(Game.spawns[0], role)
+        }
     }
 
     // Creep management (e.g., numbers and spawning)

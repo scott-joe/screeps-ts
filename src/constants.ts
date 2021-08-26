@@ -3,6 +3,13 @@ import { CreepRecipe, Size } from 'types/main'
 export const creepSize = Size.SM
 export const minEnergy = 300
 
+export const censusConfig = {
+    HARVESTER: { min: 3, cur: 0 },
+    BUILDER: { min: 2, cur: 0 },
+    UPGRADER: { min: 1, cur: 0 },
+    SOLDIER: { min: 1, cur: 0 }
+}
+
 export const creepRecipes: CreepRecipe = {
     HARVESTER: {
         SM: [WORK, CARRY, MOVE],
