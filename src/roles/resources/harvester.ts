@@ -21,6 +21,16 @@ export default {
                     )
                 }
             })
+
+            if (creep.ticksToLive! <= 500) {
+              const spawns = creep.room.find(FIND_MY_SPAWNS)
+              if (spawns[0].renewCreep(creep) === ERR_NOT_IN_RANGE) {
+                  creep.moveTo(spawns[0], {
+                      visualizePathStyle: { stroke: '#ffaa00' }
+                  })
+              }
+            }
+
             // if there are any, move there
             if (targets.length > 0) {
                 if (

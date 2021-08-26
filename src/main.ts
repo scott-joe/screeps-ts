@@ -55,21 +55,16 @@ export const loop = ErrorMapper.wrapLoop(() => {
     for (const name in creeps) {
         const creep = creeps[name]
         const role: CreepRole = creep.memory.role as CreepRole
-        Memory.census[role].cur += 1
 
         switch (role) {
             case CreepRole.HARVESTER:
                 harvester.run(creep)
-                // census[role].list.push(creep)
                 break
             case CreepRole.BUILDER:
                 builder.run(creep)
                 break
             case CreepRole.UPGRADER:
                 upgrader.run(creep)
-                break
-            case CreepRole.SOLDIER:
-                // soldier.run(creep)
                 break
             default:
                 break
