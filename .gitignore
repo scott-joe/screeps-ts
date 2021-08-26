@@ -5,7 +5,7 @@
 /package-lock.json
 
 # Ignore basic folders
-/dist
+# /dist
 /.rpt2_cache
 /tsc-out
 /node_modules
