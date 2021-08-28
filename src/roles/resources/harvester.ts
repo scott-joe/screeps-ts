@@ -1,4 +1,4 @@
-import { minTTL } from 'constants'
+import { minTTL } from '../../constants'
 import builder from 'roles/construction/builder'
 import { renew } from 'roles/utils'
 import { findStructures, harvest } from './utils'
