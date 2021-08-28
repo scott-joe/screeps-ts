@@ -32,3 +32,5 @@ export const creepRecipes: CreepRecipe = {
         LG: [HEAL, TOUGH, TOUGH, MOVE, MOVE, MOVE, ATTACK, ATTACK]
     }
 }
+
+export const minTTL = 500

@@ -11,7 +11,7 @@ const spawnCreep = (spawn: StructureSpawn, role: CreepRole): void => {
     const body = creepRecipes[role].SM
     Memory.census[role].cur += 1
     spawn.spawnCreep(body, name, {
-      memory: { role }
+        memory: { role }
     })
 }
 

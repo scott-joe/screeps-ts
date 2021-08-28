@@ -1,46 +1,39 @@
+import { minTTL } from 'constants'
+import builder from 'roles/construction/builder'
+import { renew } from 'roles/utils'
+import { findStructures, harvest } from './utils'
+
 export default {
     run(creep: Creep) {
-        // If there's room, go harvest more
+        // If there's room, harvest
         if (creep.store.getFreeCapacity() > 0) {
-            const sources = creep.room.find(FIND_SOURCES)
-            if (creep.harvest(sources[0]) === ERR_NOT_IN_RANGE) {
-                creep.moveTo(sources[0], {
-                    visualizePathStyle: { stroke: '#ffaa00' }
-                })
-            }
-            // return to the nearest strucuture capable of receiving energy
+            harvest(creep)
         } else {
             // get all strucutures capable of receiving energy
-            const targets = creep.room.find(FIND_STRUCTURES, {
-                filter: structure => {
-                    return (
-                        (structure.structureType === STRUCTURE_EXTENSION ||
-                            structure.structureType === STRUCTURE_SPAWN ||
-                            structure.structureType === STRUCTURE_TOWER) &&
-                        structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-                    )
-                }
-            })
+            const targets = findStructures(creep)
 
-            if (creep.ticksToLive! <= 500) {
-              const spawns = creep.room.find(FIND_MY_SPAWNS)
-              if (spawns[0].renewCreep(creep) === ERR_NOT_IN_RANGE) {
-                  creep.moveTo(spawns[0], {
-                      visualizePathStyle: { stroke: '#ffaa00' }
-                  })
-              }
+            // If about to die, go get renewed
+            if (creep.ticksToLive! <= minTTL) {
+                renew(creep)
             }
 
             // if there are any, move there
-            if (targets.length > 0) {
+            const target = targets[0]
+            if (
+                // @ts-ignore
+                target.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
+                targets.length > 0
+            ) {
                 if (
-                    creep.transfer(targets[0], RESOURCE_ENERGY) ===
-                    ERR_NOT_IN_RANGE
+                    creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE
                 ) {
-                    creep.moveTo(targets[0], {
+                    creep.moveTo(target, {
                         visualizePathStyle: { stroke: '#ffffff' }
                     })
                 }
+            } else {
+                // GO FIND SOMETHING TO BUILD
+                builder.run(creep)
             }
         }
     }

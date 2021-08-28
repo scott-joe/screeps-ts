@@ -4,6 +4,14 @@ import { builder, harvester, upgrader } from 'roles'
 import { Census, CensusStatus, CreepRole, Division } from 'types/main'
 import { ErrorMapper } from 'utils/ErrorMapper'
 
+// TODO: Find other energy sources if this one is taken
+// TODO: Queue priority directions that override roles
+// TODO: Harvesters and Builders?...
+// TODO: Setting intent via creep memory to it only has to look
+//       up "what to do" every so often
+// TODO: Prioritization or formula of base building
+//       Do X until Y, then A until B
+
 declare global {
     /*
       Example types, expand on these or remove them and add your own.

@@ -17,8 +17,8 @@
     "files.insertFinalNewline": true,
     "files.trimTrailingWhitespace": true,
     "editor.tabSize": 4,
-    "editor.insertSpaces": false,
-    "editor.detectIndentation": false,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": true,
     "search.exclude": {
         "_book/**": true,
         ".rpt2_cache/**": true,
