@@ -1,16 +1,8 @@
-import { censusConfig } from './constants'
-import { garrison, guard } from 'controllers'
-import { builder, harvester, upgrader } from 'roles'
-import { Census, CensusStatus, CreepRole, Division } from 'types/main'
 import { ErrorMapper } from 'utils/ErrorMapper'
+require('extensions/index')
 
-// TODO: Find other energy sources if this one is taken
-// TODO: Queue priority directions that override roles
-// TODO: Harvesters and Builders?...
-// TODO: Setting intent via creep memory to it only has to look
-//       up "what to do" every so often
-// TODO: Prioritization or formula of base building
-//       Do X until Y, then A until B
+import Base from 'controllers/Base'
+import { CreepRole, Division } from 'types/main'
 
 declare global {
     /*
@@ -25,7 +17,6 @@ declare global {
     interface Memory {
         uuid: number
         log: any
-        census: { [x: string]: { min: number; cur: number } }
     }
 
     interface CreepMemory {
@@ -35,6 +26,20 @@ declare global {
         working?: boolean
         building?: boolean
         upgrading?: boolean
+    }
+
+    interface Creep {
+        renew: Function
+    }
+
+    interface RoomMemory {
+        census: { [x: string]: { min: number; cur: number } }
+        spawnOrder: CreepRole[],
+        creepNum: number
+    }
+
+    interface Room {
+        base: Function
     }
 
     // Syntax for adding proprties to `global` (ex "global.log")
@@ -47,59 +52,9 @@ declare global {
 }
 
 export const loop = ErrorMapper.wrapLoop(() => {
-    // Timepiece
-    // console.log(`Current game tick is ${Game.time}`)
-
-    const spawns: { [spawnName: string]: StructureSpawn } = Game.spawns
-    const creeps: { [creepName: string]: Creep } = Game.creeps
-    // const structures: { [structureName: string]: Structure } = Game.structures
-
-    // TODO: Based on Controller level? Total energy available? LVL of each role to x1 x2 x3... roles
-    //       Based on need? Change roles based on what's needed and keep everyone fairly generlized
-    //       Based on room? Do this whole loop per room? Or operate the whole thing together
-    Memory.census = Memory.census || censusConfig
-
-    // Creep role actions
-    for (const name in creeps) {
-        const creep = creeps[name]
-        const role: CreepRole = creep.memory.role as CreepRole
-
-        switch (role) {
-            case CreepRole.HARVESTER:
-                harvester.run(creep)
-                break
-            case CreepRole.BUILDER:
-                builder.run(creep)
-                break
-            case CreepRole.UPGRADER:
-                upgrader.run(creep)
-                break
-            default:
-                break
-        }
+    for (const id in Game.rooms) {
+        new Base(Game.rooms[id]).main()
     }
-
-    // Creep management (e.g., numbers and spawning)
-    for (const id in spawns) {
-        const spawn = spawns[id]
-        garrison.run(spawn)
-    }
-
-    // Towers do tower things, and so on
-    // for (const id in structures) {
-    //     const structure: Structure = structures[id]
-
-    //     switch (structure.structureType) {
-    //         case STRUCTURE_TOWER:
-    //             guard.run(structure)
-    //             break
-
-    //         default:
-    //             break
-    //     }
-
-    //     // console.log(`structure.id: ${structure.id}`)
-    // }
 
     // Memory cleanup
     for (const name in Memory.creeps) {

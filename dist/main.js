@@ -32,10 +32,8 @@ var Size;
 Size.SM;
 const minEnergy = 300;
 const censusConfig = {
-    HARVESTER: { min: 3, cur: 0 },
-    BUILDER: { min: 2, cur: 0 },
-    UPGRADER: { min: 1, cur: 0 },
-    SOLDIER: { min: 1, cur: 0 }
+    HARVESTER: { min: 2, cur: 0 },
+    BUILDER: { min: 4, cur: 0 }
 };
 const creepRecipes = {
     HARVESTER: {
@@ -61,31 +59,34 @@ const creepRecipes = {
 };
 const minTTL = 500;
 
-const shouldSpawn = (role) => {
-    return Memory.census[role].cur < Memory.census[role].min;
+const shouldSpawn = (role, census) => {
+    return census[role].cur < census[role].min;
 };
-const spawnCreep = (spawn, role) => {
+
+
+const spawnCreep = (spawn, role, census) => {
     const name = `${role}-${Game.time}`;
     // TODO: Get body from constants/enums
     const body = creepRecipes[role].SM;
-    Memory.census[role].cur += 1;
+    census[role].cur += 1;
     spawn.spawnCreep(body, name, {
         memory: { role }
     });
 };
 var garrison = {
     run: (spawn) => {
+        const census = spawn.room.memory.census;
         if (!spawn.spawning) {
             if (spawn.store.energy >= minEnergy) {
                 switch (true) {
-                    case shouldSpawn(CreepRole.HARVESTER):
-                        spawnCreep(spawn, CreepRole.HARVESTER);
+                    case shouldSpawn(CreepRole.HARVESTER, census):
+                        spawnCreep(spawn, CreepRole.HARVESTER, census);
                         break;
-                    case shouldSpawn(CreepRole.UPGRADER):
-                        spawnCreep(spawn, CreepRole.UPGRADER);
+                    case shouldSpawn(CreepRole.UPGRADER, census):
+                        spawnCreep(spawn, CreepRole.UPGRADER, census);
                         break;
-                    case shouldSpawn(CreepRole.BUILDER):
-                        spawnCreep(spawn, CreepRole.BUILDER);
+                    case shouldSpawn(CreepRole.BUILDER, census):
+                        spawnCreep(spawn, CreepRole.BUILDER, census);
                         break;
                 }
             }
@@ -107,11 +108,25 @@ var builder = {
             creep.memory.building = true;
             creep.say('🚧 build');
         }
+        if (!creep.memory.upgrading && creep.store.getFreeCapacity() === 0) {
+            creep.memory.upgrading = true;
+            creep.say('⚡ upgrade');
+        }
         if (creep.memory.building) {
             const targets = creep.room.find(FIND_CONSTRUCTION_SITES);
             if (targets.length) {
                 if (creep.build(targets[0]) === ERR_NOT_IN_RANGE) {
                     creep.moveTo(targets[0], {
+                        visualizePathStyle: { stroke: '#ffffff' }
+                    });
+                }
+            }
+        }
+        else if (creep.memory.upgrading) {
+            if (creep.room.controller) {
+                if (creep.upgradeController(creep.room.controller) ===
+                    ERR_NOT_IN_RANGE) {
+                    creep.moveTo(creep.room.controller, {
                         visualizePathStyle: { stroke: '#ffffff' }
                     });
                 }
@@ -184,37 +199,6 @@ var harvester = {
             else {
                 // GO FIND SOMETHING TO BUILD
                 builder.run(creep);
-            }
-        }
-    }
-};
-
-var upgrader = {
-    run(creep) {
-        if (creep.memory.upgrading && creep.store[RESOURCE_ENERGY] === 0) {
-            creep.memory.upgrading = false;
-            creep.say('🔄 harvest');
-        }
-        if (!creep.memory.upgrading && creep.store.getFreeCapacity() === 0) {
-            creep.memory.upgrading = true;
-            creep.say('⚡ upgrade');
-        }
-        if (creep.memory.upgrading) {
-            if (creep.room.controller) {
-                if (creep.upgradeController(creep.room.controller) ===
-                    ERR_NOT_IN_RANGE) {
-                    creep.moveTo(creep.room.controller, {
-                        visualizePathStyle: { stroke: '#ffffff' }
-                    });
-                }
-            }
-        }
-        else {
-            const sources = creep.room.find(FIND_SOURCES);
-            if (creep.harvest(sources[0]) === ERR_NOT_IN_RANGE) {
-                creep.moveTo(sources[0], {
-                    visualizePathStyle: { stroke: '#ffaa00' }
-                });
             }
         }
     }
@@ -2859,7 +2843,7 @@ IndexedSourceMapConsumer.prototype.sourceContentFor =
  * and an object is returned with the following properties:
  *
  *   - line: The line number in the generated source, or null.  The
- *     line number is 1-based. 
+ *     line number is 1-based.
  *   - column: The column number in the generated source, or null.
  *     The column number is 0-based.
  */
@@ -3460,10 +3444,6 @@ const loop = ErrorMapper.wrapLoop(() => {
     const spawns = Game.spawns;
     const creeps = Game.creeps;
     // const structures: { [structureName: string]: Structure } = Game.structures
-    // TODO: Based on Controller level? Total energy available? LVL of each role to x1 x2 x3... roles
-    //       Based on need? Change roles based on what's needed and keep everyone fairly generlized
-    //       Based on room? Do this whole loop per room? Or operate the whole thing together
-    Memory.census = Memory.census || censusConfig;
     // Creep role actions
     for (const name in creeps) {
         const creep = creeps[name];
@@ -3475,15 +3455,22 @@ const loop = ErrorMapper.wrapLoop(() => {
             case CreepRole.BUILDER:
                 builder.run(creep);
                 break;
-            case CreepRole.UPGRADER:
-                upgrader.run(creep);
-                break;
         }
     }
-    // Creep management (e.g., numbers and spawning)
-    for (const id in spawns) {
-        const spawn = spawns[id];
-        garrison.run(spawn);
+    for (const id in Game.rooms) {
+        const room = Game.rooms[id];
+        // TODO: Based on Controller level? Total energy available? LVL of each role to x1 x2 x3... roles
+        //       Based on need? Change roles based on what's needed and keep everyone fairly generlized
+        //       Based on room? Do this whole loop per room? Or operate the whole thing together
+        room.memory.census = room.memory.census || censusConfig;
+        // Room should know it's plan
+        // Room should know the creeps in it
+        // Room should tell the spawn to add a new creep if needed
+        // Creep management (e.g., numbers and spawning)
+        for (const id in spawns) {
+            const spawn = spawns[id];
+            garrison.run(spawn);
+        }
     }
     // Towers do tower things, and so on
     // for (const id in structures) {
