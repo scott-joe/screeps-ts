@@ -34,12 +34,13 @@ declare global {
 
     interface RoomMemory {
         census: { [x: string]: { min: number; cur: number } }
-        spawnOrder: CreepRole[],
-        creepNum: number
+        spawnQueue: CreepRole[],
+        creepId: number
     }
 
     interface Room {
         base: Function
+        size: number
     }
 
     // Syntax for adding proprties to `global` (ex "global.log")
