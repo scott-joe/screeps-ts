@@ -1,4 +1,4 @@
-\import { Census, CreepRole, Size } from 'types/main'
+import { Census, CreepRole, Size } from 'types/main'
 import { creepRecipes } from '../constants'
 
 export class Garrison {

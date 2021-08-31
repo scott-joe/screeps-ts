@@ -1,5 +1,5 @@
 import { ErrorMapper } from 'utils/ErrorMapper'
-require('extensions/index')
+// require('extensions/index')
 
 import Base from 'controllers/Base'
 import { CreepRole, Division } from 'types/main'
