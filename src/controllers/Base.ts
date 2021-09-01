@@ -2,7 +2,9 @@ import { censusDefaults } from '../constants'
 import { harvester, builder } from 'roles'
 import { Census, CreepRole, Size } from 'types/main'
 import { Garrison } from './Garrison'
-import { result } from 'lodash'
+
+// TODO: CENSUS HAS NO WAY TO REMOVE CREEPS
+// TODO: CREEPS DON'T KNOW TO GO TO ANOTHER ENERGY SOURCE WHEN ONE IS FULL
 
 export default class Base {
     private room: Room

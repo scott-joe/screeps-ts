@@ -1,29 +1,32 @@
 export default {
     run(creep: Creep): void {
-        const targets = creep.room.find(FIND_CONSTRUCTION_SITES)
+        const constructionSites = creep.room.find(FIND_CONSTRUCTION_SITES)
 
         if (creep.store[RESOURCE_ENERGY] === 0) {
-            creep.memory.building = false
+            const sources = creep.room.find(FIND_SOURCES)
             creep.say('🔄 harvest')
-        }
-        if (targets.length > 0 && creep.store.getFreeCapacity() === 0) {
-            creep.memory.building = true
-            creep.say('🚧 build')
-        }
-        if (targets.length === 0 && creep.store.getFreeCapacity() === 0) {
-            creep.memory.upgrading = true
-            creep.say('⚡ upgrade')
-        }
-
-        if (creep.memory.building) {
-            if (targets.length) {
-                if (creep.build(targets[0]) === ERR_NOT_IN_RANGE) {
-                    creep.moveTo(targets[0], {
-                        visualizePathStyle: { stroke: '#ffffff' }
-                    })
-                }
+            if (creep.harvest(sources[0]) === ERR_NOT_IN_RANGE) {
+                creep.moveTo(sources[0], {
+                    visualizePathStyle: { stroke: '#ffaa00' }
+                })
             }
-        } else if (creep.memory.upgrading) {
+        }
+        if (
+            constructionSites.length > 0 &&
+            creep.store.getFreeCapacity() === 0
+        ) {
+            creep.say('🚧 build')
+            if (creep.build(constructionSites[0]) === ERR_NOT_IN_RANGE) {
+                creep.moveTo(constructionSites[0], {
+                    visualizePathStyle: { stroke: '#ffffff' }
+                })
+            }
+        }
+        if (
+            constructionSites.length === 0 &&
+            creep.store.getFreeCapacity() === 0
+        ) {
+            creep.say('⚡ upgrade')
             if (creep.room.controller) {
                 if (
                     creep.upgradeController(creep.room.controller) ===
@@ -34,13 +37,12 @@ export default {
                     })
                 }
             }
-        } else {
-            const sources = creep.room.find(FIND_SOURCES)
-            if (creep.harvest(sources[0]) === ERR_NOT_IN_RANGE) {
-                creep.moveTo(sources[0], {
-                    visualizePathStyle: { stroke: '#ffaa00' }
-                })
+        }
+
+        if (creep.memory.building) {
+            if (constructionSites.length) {
             }
+        } else if (creep.memory.upgrading) {
         }
     }
 }
