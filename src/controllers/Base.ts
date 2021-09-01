@@ -65,7 +65,6 @@ export default class Base {
     }
 
     private updateState(role: CreepRole): void {
-        console.log(`Updating census data for ${role}`)
         this.spawnQueue.shift()
         this.census[role].cur += 1
     }
@@ -77,7 +76,6 @@ export default class Base {
 
     public main(): void {
         // Make sure the Base has a spawn queue
-        console.log(`${Game.time}`)
 
         this.spawnQueue =
             this.spawnQueue.length > 0
@@ -93,7 +91,6 @@ export default class Base {
                 const role: CreepRole = this.spawnQueue[0]
 
                 const result = this.garrison.recruit(role)
-                console.log(`result ${result}`)
 
                 if (result) {
                     this.updateState(role)
@@ -137,7 +134,6 @@ export default class Base {
 //             break
 //     }
 
-//     // console.log(`structure.id: ${structure.id}`)
 // }
 
 // Based on Controller level? Total energy available? LVL of each role to x1 x2 x3... roles

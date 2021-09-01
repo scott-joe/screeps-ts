@@ -3240,7 +3240,7 @@ const minTTL = 500;
 const censusDefaults = {
     HARVESTER: { min: 2, cur: 0 },
     BUILDER: { min: 4, cur: 0 },
-    SOLDIER: { min: 0, cur: 0 },
+    SOLDIER: { min: 0, cur: 0 }
 };
 const creepRecipes = {
     HARVESTER: {
@@ -3261,6 +3261,16 @@ const creepRecipes = {
         MEDIUM: [HEAL, MOVE, TOUGH, MOVE, ATTACK, ATTACK],
         LARGE: [HEAL, TOUGH, TOUGH, MOVE, MOVE, MOVE, ATTACK, ATTACK]
     }
+};
+const partCost = {
+    move: 50,
+    work: 100,
+    carry: 50,
+    attack: 80,
+    ranged_attack: 150,
+    tough: 10,
+    heal: 250,
+    claim: 600
 };
 
 var builder = {
@@ -3425,18 +3435,8 @@ class Garrison {
     }
     canSpawn(role) {
         const recipe = creepRecipes[role][this.baseSize];
-        var bodyCost = {
-            move: 50,
-            work: 100,
-            carry: 50,
-            attack: 80,
-            ranged_attack: 150,
-            tough: 10,
-            heal: 250,
-            claim: 600
-        };
         const cost = recipe.reduce((acc, part) => {
-            return acc + bodyCost[part];
+            return acc + partCost[part];
         }, 0);
         console.log(`Available: ${this.spawn.store.energy} >= Cost: ${cost}`, this.spawn.store.energy >= cost);
         return this.spawn.store.energy >= cost;

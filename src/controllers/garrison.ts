@@ -17,11 +17,9 @@ export class Garrison {
         const body = creepRecipes[role][this.baseSize]
         console.log(name, body)
 
-        const result = this.spawn.spawnCreep(body, name, {
+        return this.spawn.spawnCreep(body, name, {
             memory: { role }
         })
-        console.log(`SpawnCreep result ${result}`)
-        return result
     }
 
     public generateSpawnQueue(size: any): CreepRole[] {
@@ -42,15 +40,11 @@ export class Garrison {
 
     private canSpawn(role: CreepRole): boolean {
         const recipe: BodyPartConstant[] = creepRecipes[role][this.baseSize]
-
-        const cost = recipe.reduce((acc: number, part: BodyPartConstant) => {
+        const reducer = (acc: number, part: BodyPartConstant) => {
             return acc + partCost[part]
-        }, 0)
+        }
 
-        console.log(
-            `Available: ${this.spawn.store.energy} >= Cost: ${cost}`,
-            this.spawn.store.energy >= cost
-        )
+        const cost = recipe.reduce(reducer, 0)
         return this.spawn.store.energy >= cost
     }
 
@@ -60,7 +54,6 @@ export class Garrison {
 
     public recruit(newRole: CreepRole): boolean {
         if (this.canSpawn(newRole) && this.shouldSpawn(newRole)) {
-            console.log(`recruiting ${newRole}`)
             return this.spawnCreep(newRole) === 0 ? true : false
         } else {
             return false
