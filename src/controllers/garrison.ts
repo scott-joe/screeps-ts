@@ -1,5 +1,5 @@
 import { Census, CreepRole, Size } from 'types/main'
-import { creepRecipes } from '../constants'
+import { creepRecipes, partCost } from '../constants'
 
 export class Garrison {
     private spawn: StructureSpawn
@@ -42,21 +42,9 @@ export class Garrison {
 
     private canSpawn(role: CreepRole): boolean {
         const recipe: BodyPartConstant[] = creepRecipes[role][this.baseSize]
-        var bodyCost: {
-            [property in BodyPartConstant]: number
-        } = {
-            move: 50,
-            work: 100,
-            carry: 50,
-            attack: 80,
-            ranged_attack: 150,
-            tough: 10,
-            heal: 250,
-            claim: 600
-        }
 
         const cost = recipe.reduce((acc: number, part: BodyPartConstant) => {
-            return acc + bodyCost[part]
+            return acc + partCost[part]
         }, 0)
 
         console.log(
