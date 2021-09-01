@@ -1,8 +1,7 @@
 import { ErrorMapper } from 'utils/ErrorMapper'
 // require('extensions/index')
-
-import Base from 'controllers/Base'
 import { CreepRole, Division } from 'types/main'
+import Base from 'controllers/Base'
 
 declare global {
     /*

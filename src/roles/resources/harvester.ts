@@ -6,7 +6,7 @@ import { findStructures, harvest } from './utils'
 export default {
     run(creep: Creep) {
         // If there's room, harvest
-        if (creep.store.getFreeCapacity() > 0) {
+        if (creep.store && creep.store.getFreeCapacity() > 0) {
             harvest(creep)
         } else {
             // get all strucutures capable of receiving energy
@@ -18,22 +18,17 @@ export default {
             }
 
             // if there are any, move there
-            const target = targets[0]
-            if (
+            if (targets.length !== 0){
+                const target = targets[0]
                 // @ts-ignore
-                target.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
-                targets.length > 0
-            ) {
-                if (
-                    creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE
-                ) {
-                    creep.moveTo(target, {
-                        visualizePathStyle: { stroke: '#ffffff' }
-                    })
+                if(target.store.getFreeCapacity(RESOURCE_ENERGY) > 0) {
+                    if (creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+                        creep.moveTo(target, {visualizePathStyle: { stroke: '#ffffff' }})
+                    }
                 }
-            } else {
-                // GO FIND SOMETHING TO BUILD
-                builder.run(creep)
+            // } else {
+            //     // GO FIND SOMETHING TO BUILD
+            //     builder.run(creep)
             }
         }
     }

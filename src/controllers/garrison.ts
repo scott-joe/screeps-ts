@@ -15,6 +15,7 @@ export class Garrison {
     private spawnCreep(role: CreepRole): CreepRole {
         const name: string = `${role}-${Game.time}`
         const body = creepRecipes[role][this.baseSize]
+        // console.log(`spawn creep ${name}`)
 
         this.spawn.spawnCreep(body, name, {
             memory: { role }
@@ -51,13 +52,13 @@ export class Garrison {
         return this.census[role].cur < this.census[role].min
     }
 
-    public recruit(): CreepRole | undefined {
-        if (!this.spawn.spawning) {
-            for (const role in CreepRole) {
-                const newRole = role as CreepRole
-                if (this.canSpawn(newRole) && this.shouldSpawn(newRole)){
-                    return this.spawnCreep(newRole)
-                }
+    public recruit(newRole: CreepRole): CreepRole | undefined {
+        // console.log(`this.spawn ${this.spawn}`)
+        // console.log(`Garrison .spawning ${this.spawn.spawning}`)
+        if (this.spawn.spawning === null) {
+            if (this.canSpawn(newRole) && this.shouldSpawn(newRole)){
+                // console.log(`recruit ${newRole}`)
+                return this.spawnCreep(newRole)
             }
         }
 
