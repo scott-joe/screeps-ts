@@ -1,8 +1,8 @@
-import { censusDefaults } from "../constants"
-import { harvester, builder } from "roles"
-import { Census, CreepRole, Size } from "types/main"
-import { Garrison } from "./Garrison"
-import { result } from "lodash"
+import { censusDefaults } from '../constants'
+import { harvester, builder } from 'roles'
+import { Census, CreepRole, Size } from 'types/main'
+import { Garrison } from './Garrison'
+import { result } from 'lodash'
 
 export default class Base {
     private room: Room
@@ -16,7 +16,7 @@ export default class Base {
 
     private garrison: Garrison
 
-    constructor (room: Room) {
+    constructor(room: Room) {
         this.room = room
         this.spawns = this.room.find(FIND_MY_SPAWNS) // <= 3
         this.memory = this.room.memory
@@ -31,7 +31,7 @@ export default class Base {
         for (const name in creeps) {
             const creep = creeps[name]
 
-            if (!creep.spawning){
+            if (!creep.spawning) {
                 switch (creep.memory.role) {
                     case CreepRole.HARVESTER:
                         harvester.run(creep)
@@ -64,12 +64,10 @@ export default class Base {
         }
     }
 
-    private updateState(role: CreepRole | undefined): void {
-        if (!!role) {
-            this.spawnQueue.shift()
-            this.census[role].cur += 1
-            // console.log(`updateState ${this.census[role].cur}`)
-        }
+    private updateState(role: CreepRole): void {
+        console.log(`Updating census data for ${role}`)
+        this.spawnQueue.shift()
+        this.census[role].cur += 1
     }
 
     private save() {
@@ -77,17 +75,31 @@ export default class Base {
         this.memory.census = this.census
     }
 
-    public main (): void {
+    public main(): void {
         // Make sure the Base has a spawn queue
-        this.spawnQueue = this.spawnQueue.length > 0
-            ? this.spawnQueue
-            : this.garrison.generateSpawnQueue(100)
+        console.log(`${Game.time}`)
+
+        this.spawnQueue =
+            this.spawnQueue.length > 0
+                ? this.spawnQueue
+                : this.garrison.generateSpawnQueue(100)
 
         // Recruit new creep and add to census
-        const newRole: CreepRole = this.spawnQueue[0]
-        const result = this.garrison.recruit(newRole)
-        console.log(result)
-        this.updateState(result)
+        for (const id in this.spawns) {
+            const spawn = this.spawns[id]
+
+            // Will be a creep object if spawning and null if not
+            if (spawn.spawning === null) {
+                const role: CreepRole = this.spawnQueue[0]
+
+                const result = this.garrison.recruit(role)
+                console.log(`result ${result}`)
+
+                if (result) {
+                    this.updateState(role)
+                }
+            }
+        }
 
         this.applyCreepRoleBehavior()
 
@@ -97,7 +109,6 @@ export default class Base {
 
 // const spawns: { [spawnName: string]: StructureSpawn } = Game.spawns
 // const structures: { [structureName: string]: Structure } = Game.structures
-
 
 // • Find other energy sources if this one is taken
 // • Queue priority directions that override roles

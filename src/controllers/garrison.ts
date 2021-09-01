@@ -6,22 +6,22 @@ export class Garrison {
     private census: Census
     private baseSize: Size
 
-    constructor (spawn: StructureSpawn, census: Census, baseSize: Size) {
+    constructor(spawn: StructureSpawn, census: Census, baseSize: Size) {
         this.spawn = spawn
         this.census = census
         this.baseSize = baseSize
     }
 
-    private spawnCreep(role: CreepRole): CreepRole {
+    private spawnCreep(role: CreepRole): ScreepsReturnCode {
         const name: string = `${role}-${Game.time}`
         const body = creepRecipes[role][this.baseSize]
-        // console.log(`spawn creep ${name}`)
+        console.log(name, body)
 
-        this.spawn.spawnCreep(body, name, {
+        const result = this.spawn.spawnCreep(body, name, {
             memory: { role }
         })
-
-        return role
+        console.log(`SpawnCreep result ${result}`)
+        return result
     }
 
     public generateSpawnQueue(size: any): CreepRole[] {
@@ -41,27 +41,41 @@ export class Garrison {
     }
 
     private canSpawn(role: CreepRole): boolean {
-        const perPartCost = 50
         const recipe: BodyPartConstant[] = creepRecipes[role][this.baseSize]
-        const cost = recipe.length * perPartCost
+        var bodyCost: {
+            [property in BodyPartConstant]: number
+        } = {
+            move: 50,
+            work: 100,
+            carry: 50,
+            attack: 80,
+            ranged_attack: 150,
+            tough: 10,
+            heal: 250,
+            claim: 600
+        }
 
+        const cost = recipe.reduce((acc: number, part: BodyPartConstant) => {
+            return acc + bodyCost[part]
+        }, 0)
+
+        console.log(
+            `Available: ${this.spawn.store.energy} >= Cost: ${cost}`,
+            this.spawn.store.energy >= cost
+        )
         return this.spawn.store.energy >= cost
     }
 
-    private shouldSpawn (role: CreepRole): boolean {
+    private shouldSpawn(role: CreepRole): boolean {
         return this.census[role].cur < this.census[role].min
     }
 
-    public recruit(newRole: CreepRole): CreepRole | undefined {
-        // console.log(`this.spawn ${this.spawn}`)
-        // console.log(`Garrison .spawning ${this.spawn.spawning}`)
-        if (this.spawn.spawning === null) {
-            if (this.canSpawn(newRole) && this.shouldSpawn(newRole)){
-                // console.log(`recruit ${newRole}`)
-                return this.spawnCreep(newRole)
-            }
+    public recruit(newRole: CreepRole): boolean {
+        if (this.canSpawn(newRole) && this.shouldSpawn(newRole)) {
+            console.log(`recruiting ${newRole}`)
+            return this.spawnCreep(newRole) === 0 ? true : false
+        } else {
+            return false
         }
-
-        return undefined
     }
 }
