@@ -6,7 +6,6 @@ export type CensusStatus = {
 export enum CreepRole {
     HARVESTER = 'HARVESTER',
     BUILDER = 'BUILDER',
-    UPGRADER = 'UPGRADER',
     SOLDIER = 'SOLDIER'
 }
 

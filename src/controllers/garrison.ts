@@ -1,67 +1,66 @@
-import { Census, CreepRole } from 'types/main'
-import { creepRecipes, creepSize, minEnergy } from '../constants'
+import { Census, CreepRole, Size } from 'types/main'
+import { creepRecipes } from '../constants'
 
-const shouldSpawn = (role: CreepRole, census: Census): boolean => {
-    return census[role].cur < census[role].min
-}
+export class Garrison {
+    private spawn: StructureSpawn
+    private census: Census
+    private baseSize: Size
 
-const spawnCreep = (spawn: StructureSpawn, role: CreepRole, census: Census): void => {
-    const name: string = `${role}-${Game.time}`
-    // TODO: Get body from constants/enums
-    const body = creepRecipes[role].SM
-    census[role].cur += 1
-    spawn.spawnCreep(body, name, {
-        memory: { role }
-    })
-}
-
-const HARVESTER_FREQUENCY = 3
-const BUILDER_FREQUENCY = 2
-const generateSpawnOrder = (size: any, room: Room): CreepRole[] => {
-    const spawnOrder = []
-    for (let i = 1; i <= size; i++) {
-        if (i % HARVESTER_FREQUENCY === 0) {
-            spawnOrder.push(CreepRole.HARVESTER)
-        } else if (i % BUILDER_FREQUENCY === 0) {
-            spawnOrder.push(CreepRole.BUILDER)
-        }
+    constructor (spawn: StructureSpawn, census: Census, baseSize: Size) {
+        this.spawn = spawn
+        this.census = census
+        this.baseSize = baseSize
     }
-    return spawnOrder
-}
 
-export default {
-    run: (spawn: StructureSpawn): void => {
-        const census: Census = spawn.room.memory.census
-        const room: Room = spawn.room
-        const spawnQueue: CreepRole[] = room.memory.spawnOrder || []
-        if (spawnQueue.length === 0) {
-            room.memory.spawnOrder = generateSpawnOrder(100, room)
+    private spawnCreep(role: CreepRole): CreepRole {
+        const name: string = `${role}-${Game.time}`
+        const body = creepRecipes[role][this.baseSize]
+
+        this.spawn.spawnCreep(body, name, {
+            memory: { role }
+        })
+
+        return role
+    }
+
+    public generateSpawnQueue(size: any): CreepRole[] {
+        const HARVESTER_FREQUENCY = 5
+        const BUILDER_FREQUENCY = 2
+        const output = []
+
+        for (let i = 1; i <= size; i++) {
+            if (i % HARVESTER_FREQUENCY === 0) {
+                output.push(CreepRole.HARVESTER)
+            } else if (i % BUILDER_FREQUENCY === 0) {
+                output.push(CreepRole.BUILDER)
+            }
         }
 
-        if (!spawn.spawning) {
-            if (spawn.store.energy >= minEnergy) {
-                switch (true) {
-                    case shouldSpawn(CreepRole.HARVESTER, census):
-                        spawnCreep(spawn, CreepRole.HARVESTER, census)
-                        break
-                    case shouldSpawn(CreepRole.UPGRADER, census):
-                        spawnCreep(spawn, CreepRole.UPGRADER, census)
-                        break
-                    case shouldSpawn(CreepRole.BUILDER, census):
-                        spawnCreep(spawn, CreepRole.BUILDER, census)
-                        break
-                    default:
-                        break
+        return output
+    }
+
+    private canSpawn(role: CreepRole): boolean {
+        const perPartCost = 50
+        const recipe: BodyPartConstant[] = creepRecipes[role][this.baseSize]
+        const cost = recipe.length * perPartCost
+
+        return this.spawn.store.energy >= cost
+    }
+
+    private shouldSpawn (role: CreepRole): boolean {
+        return this.census[role].cur < this.census[role].min
+    }
+
+    public recruit(): CreepRole | undefined {
+        if (!this.spawn.spawning) {
+            for (const role in CreepRole) {
+                const newRole = role as CreepRole
+                if (this.canSpawn(newRole) && this.shouldSpawn(newRole)){
+                    return this.spawnCreep(newRole)
                 }
             }
-        } else {
-            const newCreepName = spawn.spawning.name
-            spawn.room.visual.text(
-                `🛠️ ${newCreepName}`,
-                spawn.pos.x + 1,
-                spawn.pos.y,
-                { align: 'left', opacity: 0.8 }
-            )
         }
+
+        return undefined
     }
 }
