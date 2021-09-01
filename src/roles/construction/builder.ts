@@ -10,16 +10,14 @@ export default {
                     visualizePathStyle: { stroke: '#ffaa00' }
                 })
             }
-        }
-        if (sites.length > 0 && creep.store.getFreeCapacity() === 0) {
+        } else if (sites.length > 0 && creep.store.getFreeCapacity() === 0) {
             creep.say('🚧 build')
             if (creep.build(sites[0]) === ERR_NOT_IN_RANGE) {
                 creep.moveTo(sites[0], {
                     visualizePathStyle: { stroke: '#ffffff' }
                 })
             }
-        }
-        if (sites.length === 0 && creep.store.getFreeCapacity() === 0) {
+        } else if (sites.length === 0 && creep.store.getFreeCapacity() === 0) {
             creep.say('⚡ upgrade')
             if (creep.room.controller) {
                 if (

@@ -3275,7 +3275,7 @@ const partCost = {
 
 var builder = {
     run(creep) {
-        const constructionSites = creep.room.find(FIND_CONSTRUCTION_SITES);
+        const sites = creep.room.find(FIND_CONSTRUCTION_SITES);
         if (creep.store[RESOURCE_ENERGY] === 0) {
             const sources = creep.room.find(FIND_SOURCES);
             creep.say('🔄 harvest');
@@ -3285,17 +3285,15 @@ var builder = {
                 });
             }
         }
-        if (constructionSites.length > 0 &&
-            creep.store.getFreeCapacity() === 0) {
+        if (sites.length > 0 && creep.store.getFreeCapacity() === 0) {
             creep.say('🚧 build');
-            if (creep.build(constructionSites[0]) === ERR_NOT_IN_RANGE) {
-                creep.moveTo(constructionSites[0], {
+            if (creep.build(sites[0]) === ERR_NOT_IN_RANGE) {
+                creep.moveTo(sites[0], {
                     visualizePathStyle: { stroke: '#ffffff' }
                 });
             }
         }
-        if (constructionSites.length === 0 &&
-            creep.store.getFreeCapacity() === 0) {
+        if (sites.length === 0 && creep.store.getFreeCapacity() === 0) {
             creep.say('⚡ upgrade');
             if (creep.room.controller) {
                 if (creep.upgradeController(creep.room.controller) ===
@@ -3306,10 +3304,6 @@ var builder = {
                 }
             }
         }
-        if (creep.memory.building) {
-            if (constructionSites.length) ;
-        }
-        else if (creep.memory.upgrading) ;
     }
 };
 

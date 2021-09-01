@@ -5,6 +5,7 @@ import { Garrison } from './Garrison'
 
 // TODO: CENSUS HAS NO WAY TO REMOVE CREEPS
 // TODO: CREEPS DON'T KNOW TO GO TO ANOTHER ENERGY SOURCE WHEN ONE IS FULL
+// TODO: CREEPS COLLECT ENERGY LAYING ON THE GROUND
 
 export default class Base {
     private room: Room
@@ -76,9 +77,27 @@ export default class Base {
         this.memory.census = this.census
     }
 
+    private cleanMemory() {
+        for (const name in Memory.creeps) {
+            if (!(name in Game.creeps)) {
+                const creep: Creep = Game.creeps[name]
+                const role: CreepRole = creep.memory.role
+                const count: number = this.memory.census[role].cur
+
+                console.log(`Removing ${name} from Memory`)
+                this.memory.census[role].cur = count - 1
+                delete Memory.creeps[name]
+            }
+        }
+    }
+
+    private isSpawning(spawn: StructureSpawn): boolean {
+        // Will be a creep object if spawning and null if not
+        return spawn.spawning === null
+    }
+
     public main(): void {
         // Make sure the Base has a spawn queue
-
         this.spawnQueue =
             this.spawnQueue.length > 0
                 ? this.spawnQueue
@@ -88,19 +107,15 @@ export default class Base {
         for (const id in this.spawns) {
             const spawn = this.spawns[id]
 
-            // Will be a creep object if spawning and null if not
-            if (spawn.spawning === null) {
+            if (!this.isSpawning(spawn)) {
                 const role: CreepRole = this.spawnQueue[0]
-
                 const result = this.garrison.recruit(role)
-
-                if (result) {
-                    this.updateState(role)
-                }
+                if (result) this.updateState(role)
             }
         }
 
         this.applyCreepRoleBehavior()
+        this.cleanMemory()
 
         this.save()
     }
