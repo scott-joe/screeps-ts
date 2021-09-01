@@ -1,5 +1,5 @@
 import { ErrorMapper } from 'utils/ErrorMapper'
-require('extensions/index')
+// require('extensions/index')
 
 import Base from 'controllers/Base'
 import { CreepRole, Division } from 'types/main'
@@ -34,7 +34,7 @@ declare global {
 
     interface RoomMemory {
         census: { [x: string]: { min: number; cur: number } }
-        spawnOrder: CreepRole[],
+        spawnOrder: CreepRole[]
         creepNum: number
     }
 

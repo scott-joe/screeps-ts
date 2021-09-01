@@ -2,207 +2,12 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
-var CreepRole;
-(function (CreepRole) {
-    CreepRole["HARVESTER"] = "HARVESTER";
-    CreepRole["BUILDER"] = "BUILDER";
-    CreepRole["UPGRADER"] = "UPGRADER";
-    CreepRole["SOLDIER"] = "SOLDIER";
-})(CreepRole || (CreepRole = {}));
-var Division;
-(function (Division) {
-    Division["CONSTRUCTION"] = "CONSTRUCTION";
-    Division["DEFENSE"] = "DEFENSE";
-    Division["OPERATIONS"] = "OPERATIONS";
-    Division["RESOURCES"] = "RESOURCES";
-})(Division || (Division = {}));
-var Strategy;
-(function (Strategy) {
-    Strategy["RAID"] = "RAID";
-    Strategy["CLOISTER"] = "CLOISTER";
-    Strategy["ENTERPRISE"] = "ENTERPRISE";
-})(Strategy || (Strategy = {}));
-var Size;
-(function (Size) {
-    Size["SM"] = "SM";
-    Size["MED"] = "MED";
-    Size["LG"] = "LG";
-})(Size || (Size = {}));
+var censusConfig = require('constants');
+var main = require('types/main');
 
-Size.SM;
-const minEnergy = 300;
-const censusConfig = {
-    HARVESTER: { min: 2, cur: 0 },
-    BUILDER: { min: 4, cur: 0 }
-};
-const creepRecipes = {
-    HARVESTER: {
-        SM: [WORK, CARRY, MOVE],
-        MED: [WORK, WORK, CARRY, CARRY, MOVE, MOVE],
-        LG: [WORK, WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE]
-    },
-    BUILDER: {
-        SM: [WORK, CARRY, MOVE],
-        MED: [WORK, WORK, WORK, CARRY, CARRY, MOVE],
-        LG: [WORK, WORK, WORK, WORK, CARRY, CARRY, CARRY, CARRY, MOVE]
-    },
-    UPGRADER: {
-        SM: [WORK, CARRY, MOVE],
-        MED: [WORK, WORK, CARRY, CARRY, MOVE, MOVE],
-        LG: [WORK, WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE]
-    },
-    SOLDIER: {
-        SM: [HEAL, TOUGH, MOVE, MOVE, ATTACK],
-        MED: [HEAL, TOUGH, MOVE, MOVE, ATTACK, ATTACK],
-        LG: [HEAL, TOUGH, TOUGH, MOVE, MOVE, MOVE, ATTACK, ATTACK]
-    }
-};
-const minTTL = 500;
+function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
 
-const shouldSpawn = (role, census) => {
-    return census[role].cur < census[role].min;
-};
-
-
-const spawnCreep = (spawn, role, census) => {
-    const name = `${role}-${Game.time}`;
-    // TODO: Get body from constants/enums
-    const body = creepRecipes[role].SM;
-    census[role].cur += 1;
-    spawn.spawnCreep(body, name, {
-        memory: { role }
-    });
-};
-var garrison = {
-    run: (spawn) => {
-        const census = spawn.room.memory.census;
-        if (!spawn.spawning) {
-            if (spawn.store.energy >= minEnergy) {
-                switch (true) {
-                    case shouldSpawn(CreepRole.HARVESTER, census):
-                        spawnCreep(spawn, CreepRole.HARVESTER, census);
-                        break;
-                    case shouldSpawn(CreepRole.UPGRADER, census):
-                        spawnCreep(spawn, CreepRole.UPGRADER, census);
-                        break;
-                    case shouldSpawn(CreepRole.BUILDER, census):
-                        spawnCreep(spawn, CreepRole.BUILDER, census);
-                        break;
-                }
-            }
-        }
-        else {
-            const newCreepName = spawn.spawning.name;
-            spawn.room.visual.text(`🛠️ ${newCreepName}`, spawn.pos.x + 1, spawn.pos.y, { align: 'left', opacity: 0.8 });
-        }
-    }
-};
-
-var builder = {
-    run(creep) {
-        if (creep.memory.building && creep.store[RESOURCE_ENERGY] === 0) {
-            creep.memory.building = false;
-            creep.say('🔄 harvest');
-        }
-        if (!creep.memory.building && creep.store.getFreeCapacity() === 0) {
-            creep.memory.building = true;
-            creep.say('🚧 build');
-        }
-        if (!creep.memory.upgrading && creep.store.getFreeCapacity() === 0) {
-            creep.memory.upgrading = true;
-            creep.say('⚡ upgrade');
-        }
-        if (creep.memory.building) {
-            const targets = creep.room.find(FIND_CONSTRUCTION_SITES);
-            if (targets.length) {
-                if (creep.build(targets[0]) === ERR_NOT_IN_RANGE) {
-                    creep.moveTo(targets[0], {
-                        visualizePathStyle: { stroke: '#ffffff' }
-                    });
-                }
-            }
-        }
-        else if (creep.memory.upgrading) {
-            if (creep.room.controller) {
-                if (creep.upgradeController(creep.room.controller) ===
-                    ERR_NOT_IN_RANGE) {
-                    creep.moveTo(creep.room.controller, {
-                        visualizePathStyle: { stroke: '#ffffff' }
-                    });
-                }
-            }
-        }
-        else {
-            const sources = creep.room.find(FIND_SOURCES);
-            if (creep.harvest(sources[0]) === ERR_NOT_IN_RANGE) {
-                creep.moveTo(sources[0], {
-                    visualizePathStyle: { stroke: '#ffaa00' }
-                });
-            }
-        }
-    }
-};
-
-const renew = (creep) => {
-    const spawns = creep.room.find(FIND_MY_SPAWNS);
-    if (spawns[0].renewCreep(creep) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(spawns[0], {
-            visualizePathStyle: { stroke: '#ffaa00' }
-        });
-    }
-};
-
-const findStructures = (creep) => {
-    return creep.room.find(FIND_STRUCTURES, {
-        filter: structure => {
-            return ((structure.structureType === STRUCTURE_EXTENSION ||
-                structure.structureType === STRUCTURE_SPAWN ||
-                structure.structureType === STRUCTURE_TOWER) &&
-                structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0);
-        }
-    });
-};
-const harvest = (creep) => {
-    const sources = creep.room.find(FIND_SOURCES);
-    if (creep.harvest(sources[0]) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(sources[0], {
-            visualizePathStyle: { stroke: '#ffaa00' }
-        });
-    }
-};
-
-var harvester = {
-    run(creep) {
-        // If there's room, harvest
-        if (creep.store.getFreeCapacity() > 0) {
-            harvest(creep);
-        }
-        else {
-            // get all strucutures capable of receiving energy
-            const targets = findStructures(creep);
-            // If about to die, go get renewed
-            if (creep.ticksToLive <= minTTL) {
-                renew(creep);
-            }
-            // if there are any, move there
-            const target = targets[0];
-            if (
-            // @ts-ignore
-            target.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
-                targets.length > 0) {
-                if (creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-                    creep.moveTo(target, {
-                        visualizePathStyle: { stroke: '#ffffff' }
-                    });
-                }
-            }
-            else {
-                // GO FIND SOMETHING TO BUILD
-                builder.run(creep);
-            }
-        }
-    }
-};
+var censusConfig__default = /*#__PURE__*/_interopDefaultLegacy(censusConfig);
 
 var sourceMapGenerator = {};
 
@@ -2843,7 +2648,7 @@ IndexedSourceMapConsumer.prototype.sourceContentFor =
  * and an object is returned with the following properties:
  *
  *   - line: The line number in the generated source, or null.  The
- *     line number is 1-based.
+ *     line number is 1-based. 
  *   - column: The column number in the generated source, or null.
  *     The column number is 0-based.
  */
@@ -3438,52 +3243,227 @@ class ErrorMapper {
 // Cache previously mapped traces to improve performance
 ErrorMapper.cache = {};
 
-const loop = ErrorMapper.wrapLoop(() => {
-    // Timepiece
-    // console.log(`Current game tick is ${Game.time}`)
-    const spawns = Game.spawns;
-    const creeps = Game.creeps;
-    // const structures: { [structureName: string]: Structure } = Game.structures
-    // Creep role actions
-    for (const name in creeps) {
-        const creep = creeps[name];
-        const role = creep.memory.role;
-        switch (role) {
-            case CreepRole.HARVESTER:
-                harvester.run(creep);
-                break;
-            case CreepRole.BUILDER:
+var builder = {
+    run(creep) {
+        if (creep.memory.building && creep.store[RESOURCE_ENERGY] === 0) {
+            creep.memory.building = false;
+            creep.say('🔄 harvest');
+        }
+        if (!creep.memory.building && creep.store.getFreeCapacity() === 0) {
+            creep.memory.building = true;
+            creep.say('🚧 build');
+        }
+        if (!creep.memory.upgrading && creep.store.getFreeCapacity() === 0) {
+            creep.memory.upgrading = true;
+            creep.say('⚡ upgrade');
+        }
+        if (creep.memory.building) {
+            const targets = creep.room.find(FIND_CONSTRUCTION_SITES);
+            if (targets.length) {
+                if (creep.build(targets[0]) === ERR_NOT_IN_RANGE) {
+                    creep.moveTo(targets[0], {
+                        visualizePathStyle: { stroke: '#ffffff' }
+                    });
+                }
+            }
+        }
+        else if (creep.memory.upgrading) {
+            if (creep.room.controller) {
+                if (creep.upgradeController(creep.room.controller) ===
+                    ERR_NOT_IN_RANGE) {
+                    creep.moveTo(creep.room.controller, {
+                        visualizePathStyle: { stroke: '#ffffff' }
+                    });
+                }
+            }
+        }
+        else {
+            const sources = creep.room.find(FIND_SOURCES);
+            if (creep.harvest(sources[0]) === ERR_NOT_IN_RANGE) {
+                creep.moveTo(sources[0], {
+                    visualizePathStyle: { stroke: '#ffaa00' }
+                });
+            }
+        }
+    }
+};
+
+const minTTL = 500;
+({
+    HARVESTER: {
+        ZERO: [],
+        SMALL: [WORK, CARRY, MOVE],
+        MEDIUM: [WORK, WORK, CARRY, CARRY, MOVE, MOVE],
+        LARGE: [WORK, WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE]
+    },
+    BUILDER: {
+        ZERO: [],
+        SMALL: [WORK, CARRY, MOVE],
+        MEDIUM: [WORK, WORK, WORK, CARRY, CARRY, MOVE],
+        LARGE: [WORK, WORK, WORK, WORK, CARRY, CARRY, CARRY, CARRY, MOVE]
+    },
+    UPGRADER: {
+        ZERO: [],
+        SMALL: [WORK, CARRY, MOVE],
+        MEDIUM: [WORK, WORK, CARRY, CARRY, MOVE, MOVE],
+        LARGE: [WORK, WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE]
+    },
+    SOLDIER: {
+        ZERO: [],
+        SMALL: [HEAL, MOVE, TOUGH, MOVE, ATTACK],
+        MEDIUM: [HEAL, MOVE, TOUGH, MOVE, ATTACK, ATTACK],
+        LARGE: [HEAL, TOUGH, TOUGH, MOVE, MOVE, MOVE, ATTACK, ATTACK]
+    }
+});
+
+const renew = (creep) => {
+    const spawns = creep.room.find(FIND_MY_SPAWNS);
+    if (spawns[0].renewCreep(creep) === ERR_NOT_IN_RANGE) {
+        creep.moveTo(spawns[0], {
+            visualizePathStyle: { stroke: '#ffaa00' }
+        });
+    }
+};
+
+const findStructures = (creep) => {
+    return creep.room.find(FIND_STRUCTURES, {
+        filter: structure => {
+            return ((structure.structureType === STRUCTURE_EXTENSION ||
+                structure.structureType === STRUCTURE_SPAWN ||
+                structure.structureType === STRUCTURE_TOWER) &&
+                structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0);
+        }
+    });
+};
+const harvest = (creep) => {
+    const sources = creep.room.find(FIND_SOURCES);
+    if (creep.harvest(sources[0]) === ERR_NOT_IN_RANGE) {
+        creep.moveTo(sources[0], {
+            visualizePathStyle: { stroke: '#ffaa00' }
+        });
+    }
+};
+
+var harvester = {
+    run(creep) {
+        // If there's room, harvest
+        if (creep.store.getFreeCapacity() > 0) {
+            harvest(creep);
+        }
+        else {
+            // get all strucutures capable of receiving energy
+            const targets = findStructures(creep);
+            // If about to die, go get renewed
+            if (creep.ticksToLive <= minTTL) {
+                renew(creep);
+            }
+            // if there are any, move there
+            const target = targets[0];
+            if (
+            // @ts-ignore
+            target.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
+                targets.length > 0) {
+                if (creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+                    creep.moveTo(target, {
+                        visualizePathStyle: { stroke: '#ffffff' }
+                    });
+                }
+            }
+            else {
+                // GO FIND SOMETHING TO BUILD
                 builder.run(creep);
-                break;
+            }
         }
     }
+};
+
+class Base {
+    constructor(room) {
+        this.room = room;
+        this.memory = this.room.memory;
+        this.size = this.calculateBaseSize();
+        this.census = this.memory.census || censusConfig__default['default'];
+    }
+    calculateBaseSize() {
+        var _a;
+        switch ((_a = this.room.controller) === null || _a === void 0 ? void 0 : _a.level) {
+            case 1:
+            case 2:
+                return main.Size.SMALL;
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+                return main.Size.MEDIUM;
+            case 7:
+            case 8:
+                return main.Size.LARGE;
+            default:
+                return main.Size.ZERO;
+        }
+    }
+    // • Find other energy sources if this one is taken
+    // • Queue priority directions that override roles
+    // • Harvesters and Builders?...
+    // • Setting intent via creep memory to it only has to look
+    //       up "what to do" every so often
+    // • Prioritization or formula of base building
+    //       Do X until Y, then A until B
+    // ASK HOW MANY CREEPS THERE ARE
+    // SET CREEP CENSUS LEVEL BASED ON
+    // REQUEST MORE FROM GARRISON IF NECESSARY
+    // CHECK IF BUILDINGS NEED REPAIR
+    // SET PRIORITY BASED ON STATE OF THE ROOM
+    main() {
+        Game.spawns;
+        const creeps = Game.creeps;
+        Game.structures;
+        // Creep role actions
+        for (const name in creeps) {
+            const creep = creeps[name];
+            const role = creep.memory.role;
+            switch (role) {
+                case main.CreepRole.HARVESTER:
+                    harvester.run(creep);
+                    break;
+                case main.CreepRole.BUILDER:
+                    builder.run(creep);
+                    break;
+            }
+        }
+        // Towers do tower things, and so on
+        // for (const id in structures) {
+        //     const structure: Structure = structures[id]
+        //     switch (structure.structureType) {
+        //         case STRUCTURE_TOWER:
+        //             guard.run(structure)
+        //             break
+        //         default:
+        //             break
+        //     }
+        //     // console.log(`structure.id: ${structure.id}`)
+        // }
+        // // Based on Controller level? Total energy available? LVL of each role to x1 x2 x3... roles
+        // //       Based on need? Change roles based on what's needed and keep everyone fairly generlized
+        // //       Based on room? Do this whole loop per room? Or operate the whole thing together
+        // room.memory.census = room.memory.census || censusConfig
+        // // Room should know it's plan
+        // // Room should know the creeps in it
+        // // Room should tell the spawn to add a new creep if needed
+        // // Creep management (e.g., numbers and spawning)
+        // for (const id in spawns) {
+        //     const spawn = spawns[id]
+        //     garrison.run(spawn)
+        // }
+    }
+    harvest() {
+    }
+}
+
+const loop = ErrorMapper.wrapLoop(() => {
     for (const id in Game.rooms) {
-        const room = Game.rooms[id];
-        // TODO: Based on Controller level? Total energy available? LVL of each role to x1 x2 x3... roles
-        //       Based on need? Change roles based on what's needed and keep everyone fairly generlized
-        //       Based on room? Do this whole loop per room? Or operate the whole thing together
-        room.memory.census = room.memory.census || censusConfig;
-        // Room should know it's plan
-        // Room should know the creeps in it
-        // Room should tell the spawn to add a new creep if needed
-        // Creep management (e.g., numbers and spawning)
-        for (const id in spawns) {
-            const spawn = spawns[id];
-            garrison.run(spawn);
-        }
+        new Base(Game.rooms[id]).main();
     }
-    // Towers do tower things, and so on
-    // for (const id in structures) {
-    //     const structure: Structure = structures[id]
-    //     switch (structure.structureType) {
-    //         case STRUCTURE_TOWER:
-    //             guard.run(structure)
-    //             break
-    //         default:
-    //             break
-    //     }
-    //     // console.log(`structure.id: ${structure.id}`)
-    // }
     // Memory cleanup
     for (const name in Memory.creeps) {
         if (!(name in Game.creeps)) {
