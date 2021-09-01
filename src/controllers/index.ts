@@ -1,4 +1,3 @@
-import garrison from './garrison'
-import guard from './guard'
+import { Garrison } from './Garrison'
 
-export { garrison, guard }
+export { Garrison }

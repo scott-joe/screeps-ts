@@ -1,18 +1,20 @@
 import { censusDefaults } from "../constants"
 import { harvester, builder } from "roles"
 import { Census, CreepRole, Size } from "types/main"
-import { Garrison } from "./garrison"
+import { Garrison } from "./Garrison"
+import { result } from "lodash"
 
 export default class Base {
     private room: Room
+    private spawns: StructureSpawn[]
+
     private memory: RoomMemory
+    private spawnQueue: CreepRole[]
 
     private baseSize: Size
     private census: Census
 
-    private spawns: StructureSpawn[]
     private garrison: Garrison
-    private spawnQueue: CreepRole[]
 
     constructor (room: Room) {
         this.room = room
@@ -20,8 +22,8 @@ export default class Base {
         this.memory = this.room.memory
         this.baseSize = this.calculateBaseSize()
         this.census = this.memory.census || censusDefaults
+        this.spawnQueue = this.memory.spawnQueue || [CreepRole.HARVESTER]
         this.garrison = new Garrison(this.spawns[0], this.census, this.baseSize)
-        this.spawnQueue = this.memory.spawnQueue || []
     }
 
     private applyCreepRoleBehavior(): void {
@@ -29,15 +31,17 @@ export default class Base {
         for (const name in creeps) {
             const creep = creeps[name]
 
-            switch (creep.memory.role) {
-                case CreepRole.HARVESTER:
-                    harvester.run(creep)
-                    break
-                case CreepRole.BUILDER:
-                    builder.run(creep)
-                    break
-                default:
-                    break
+            if (!creep.spawning){
+                switch (creep.memory.role) {
+                    case CreepRole.HARVESTER:
+                        harvester.run(creep)
+                        break
+                    case CreepRole.BUILDER:
+                        builder.run(creep)
+                        break
+                    default:
+                        break
+                }
             }
         }
     }
@@ -60,14 +64,17 @@ export default class Base {
         }
     }
 
-    private updateCensus(role: CreepRole | undefined): void {
-        if (!!role && CreepRole[role]) {
+    private updateState(role: CreepRole | undefined): void {
+        if (!!role) {
+            this.spawnQueue.shift()
             this.census[role].cur += 1
+            // console.log(`updateState ${this.census[role].cur}`)
         }
     }
 
     private save() {
-        // UPDATE ROOM MEMORY WITH BASE INFO
+        this.memory.spawnQueue = this.spawnQueue
+        this.memory.census = this.census
     }
 
     public main (): void {
@@ -76,9 +83,15 @@ export default class Base {
             ? this.spawnQueue
             : this.garrison.generateSpawnQueue(100)
 
-        this.updateCensus(this.garrison.recruit())
+        // Recruit new creep and add to census
+        const newRole: CreepRole = this.spawnQueue[0]
+        const result = this.garrison.recruit(newRole)
+        console.log(result)
+        this.updateState(result)
 
         this.applyCreepRoleBehavior()
+
+        this.save()
     }
 }
 
