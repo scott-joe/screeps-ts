@@ -3275,20 +3275,20 @@ const partCost = {
 
 var builder = {
     run(creep) {
-        if (creep.memory.building && creep.store[RESOURCE_ENERGY] === 0) {
+        const targets = creep.room.find(FIND_CONSTRUCTION_SITES);
+        if (creep.store[RESOURCE_ENERGY] === 0) {
             creep.memory.building = false;
             creep.say('🔄 harvest');
         }
-        if (!creep.memory.building && creep.store.getFreeCapacity() === 0) {
+        if (targets.length > 0 && creep.store.getFreeCapacity() === 0) {
             creep.memory.building = true;
             creep.say('🚧 build');
         }
-        if (!creep.memory.upgrading && creep.store.getFreeCapacity() === 0) {
+        if (targets.length === 0 && creep.store.getFreeCapacity() === 0) {
             creep.memory.upgrading = true;
             creep.say('⚡ upgrade');
         }
         if (creep.memory.building) {
-            const targets = creep.room.find(FIND_CONSTRUCTION_SITES);
             if (targets.length) {
                 if (creep.build(targets[0]) === ERR_NOT_IN_RANGE) {
                     creep.moveTo(targets[0], {
@@ -3413,11 +3413,9 @@ class Garrison {
         const name = `${role}-${Game.time}`;
         const body = creepRecipes[role][this.baseSize];
         console.log(name, body);
-        const result = this.spawn.spawnCreep(body, name, {
+        return this.spawn.spawnCreep(body, name, {
             memory: { role }
         });
-        console.log(`SpawnCreep result ${result}`);
-        return result;
     }
     generateSpawnQueue(size) {
         const HARVESTER_FREQUENCY = 5;
@@ -3435,10 +3433,10 @@ class Garrison {
     }
     canSpawn(role) {
         const recipe = creepRecipes[role][this.baseSize];
-        const cost = recipe.reduce((acc, part) => {
+        const reducer = (acc, part) => {
             return acc + partCost[part];
-        }, 0);
-        console.log(`Available: ${this.spawn.store.energy} >= Cost: ${cost}`, this.spawn.store.energy >= cost);
+        };
+        const cost = recipe.reduce(reducer, 0);
         return this.spawn.store.energy >= cost;
     }
     shouldSpawn(role) {
@@ -3446,7 +3444,6 @@ class Garrison {
     }
     recruit(newRole) {
         if (this.canSpawn(newRole) && this.shouldSpawn(newRole)) {
-            console.log(`recruiting ${newRole}`);
             return this.spawnCreep(newRole) === 0 ? true : false;
         }
         else {
@@ -3500,7 +3497,6 @@ class Base {
         }
     }
     updateState(role) {
-        console.log(`Updating census data for ${role}`);
         this.spawnQueue.shift();
         this.census[role].cur += 1;
     }
@@ -3510,7 +3506,6 @@ class Base {
     }
     main() {
         // Make sure the Base has a spawn queue
-        console.log(`${Game.time}`);
         this.spawnQueue =
             this.spawnQueue.length > 0
                 ? this.spawnQueue
@@ -3522,7 +3517,6 @@ class Base {
             if (spawn.spawning === null) {
                 const role = this.spawnQueue[0];
                 const result = this.garrison.recruit(role);
-                console.log(`result ${result}`);
                 if (result) {
                     this.updateState(role);
                 }
@@ -3556,7 +3550,6 @@ class Base {
 //         default:
 //             break
 //     }
-//     // console.log(`structure.id: ${structure.id}`)
 // }
 // Based on Controller level? Total energy available? LVL of each role to x1 x2 x3... roles
 //       Based on need? Change roles based on what's needed and keep everyone fairly generlized
