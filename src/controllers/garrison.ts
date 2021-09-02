@@ -3,20 +3,17 @@ import { creepRecipes, partCost } from '../constants'
 
 export class Garrison {
     private spawn: StructureSpawn
-    private census: Census
     private baseSize: Size
 
-    constructor(spawn: StructureSpawn, census: Census, baseSize: Size) {
+    constructor(spawn: StructureSpawn, baseSize: Size) {
         this.spawn = spawn
-        this.census = census
         this.baseSize = baseSize
     }
 
     private spawnCreep(role: CreepRole): ScreepsReturnCode {
         const name: string = `${role}-${Game.time}`
         const body = creepRecipes[role][this.baseSize]
-        console.log(name, body)
-        console.log(`🟢 Attempting to Spawn ${role}`)
+        console.log(`🟢 Attempting to Spawn ${role}`, name, body)
 
         return this.spawn.spawnCreep(body, name, {
             memory: { role }
@@ -50,12 +47,14 @@ export class Garrison {
         return this.spawn.store.energy >= cost
     }
 
-    private shouldSpawn(role: CreepRole): boolean {
-        return this.census[role].cur < this.census[role].min
+    private shouldSpawn(role: CreepRole, census: Census): boolean {
+        console.log(`${role}: ${census[role].cur} < ${census[role].min}`)
+        return census[role].cur < census[role].min
     }
 
-    public recruit(role: CreepRole): boolean {
-        if (this.canSpawn(role) && this.shouldSpawn(role)) {
+    public recruit(role: CreepRole, census: Census): boolean {
+        console.log(`${this.canSpawn(role)} && ${this.shouldSpawn(role, census)}`)
+        if (this.canSpawn(role) && this.shouldSpawn(role, census)) {
             console.log(`🟢 Can & Should Recruit ${role}`)
             const result = this.spawnCreep(role)
 
@@ -67,7 +66,7 @@ export class Garrison {
 
             return result === 0 ? true : false
         } else {
-            console.log(`🔴 Can't or Shouldn't Recruit ${role}`)
+            // console.log(`🔴 Can't or Shouldn't Recruit ${role}`)
             return false
         }
     }

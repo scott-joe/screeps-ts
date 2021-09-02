@@ -9,6 +9,11 @@ export enum CreepRole {
     SOLDIER = 'SOLDIER'
 }
 
+export enum Activity {
+    HARVEST = 'HARVEST',
+    BUILD = 'BUILD',
+    UPGRADE = 'UPGRADE'
+}
 export interface Census {
     [x: string]: CensusStatus
 }
@@ -58,9 +63,7 @@ declare global {
         room?: string
         role: CreepRole
         division?: Division
-        working?: boolean
-        building?: boolean
-        upgrading?: boolean
+        activity?: Activity
     }
 
     interface Creep {

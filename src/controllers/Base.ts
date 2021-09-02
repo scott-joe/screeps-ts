@@ -3,21 +3,15 @@ import { harvester, builder } from 'roles'
 import { Census, CreepRole, Size } from 'types/main'
 import { Garrison } from './Garrison'
 
-// TODO: CENSUS HAS NO WAY TO REMOVE CREEPS
-// TODO: CREEPS DON'T KNOW TO GO TO ANOTHER ENERGY SOURCE WHEN ONE IS FULL
-// TODO: CREEPS COLLECT ENERGY LAYING ON THE GROUND
-
 export default class Base {
     private room: Room
     private spawns: StructureSpawn[]
+    private garrison: Garrison
 
     private memory: RoomMemory
     private spawnQueue: CreepRole[]
-
     private baseSize: Size
     private census: Census
-
-    private garrison: Garrison
 
     constructor(room: Room) {
         this.room = room
@@ -26,7 +20,7 @@ export default class Base {
         this.baseSize = this.calculateBaseSize()
         this.census = this.memory.census || censusDefaults
         this.spawnQueue = this.memory.spawnQueue || []
-        this.garrison = new Garrison(this.spawns[0], this.census, this.baseSize)
+        this.garrison = new Garrison(this.spawns[0], this.baseSize)
     }
 
     private applyCreepRoleBehavior(): void {
@@ -67,7 +61,12 @@ export default class Base {
         }
     }
 
-    private updateCensus(role: CreepRole): void {
+    private removeFromCensus(role: CreepRole): void {
+        this.spawnQueue.unshift(role)
+        this.census[role].cur += 1
+    }
+
+    private addToCensus(role: CreepRole): void {
         this.spawnQueue.shift()
         this.census[role].cur += 1
     }
@@ -77,17 +76,21 @@ export default class Base {
         this.memory.census = this.census
     }
 
-    private cleanMemory() {
-        for (const name in Memory.creeps) {
-            if (!(name in Game.creeps)) {
-                const creep: Creep = Game.creeps[name]
-                const role: CreepRole = creep.memory.role
-                const count: number = this.memory.census[role].cur
+    private rebuildCensus(): void {
+        const census = censusDefaults
 
-                console.log(`Removing ${name} from Memory`)
-                this.memory.census[role].cur = count - 1
-                delete Memory.creeps[name]
-            }
+        for (const name in Memory.creeps) {
+            const role: CreepRole = Game.creeps[name].memory.role
+            census[role].cur++
+        }
+
+        this.census = census
+    }
+
+    private removeFromMemory(name: string, role: CreepRole) {
+        if(delete Memory.creeps[name]) {
+            console.log(`🔶 Removing ${name} from Memory & Census`)
+            this.removeFromCensus(role)
         }
     }
 
@@ -105,45 +108,36 @@ export default class Base {
 
         // Recruit new creep and add to census
         for (const id in this.spawns) {
+            console.log(Game.time)
             const spawn = this.spawns[id]
 
             if (!this.isSpawning(spawn)) {
                 const role: CreepRole = this.spawnQueue[0]
-                console.log(`🟢 Attempting to Recruit ${role}`)
-                const result = this.garrison.recruit(role)
+                // console.log(`🟢 Attempting to Recruit ${role}`)
+                const result = this.garrison.recruit(role, this.census)
                 if (result) {
                     console.log(`🟢 Updating Census for ${role}`)
-                    this.updateCensus(role)
+                    this.addToCensus(role)
                 }
             } else {
-                console.log(`🔴 Spawn busy`)
+                // console.log(`🔴 Spawn busy`)
             }
         }
 
         this.applyCreepRoleBehavior()
-        this.cleanMemory()
+
+        for (const name in Memory.creeps) {
+            if (!(name in Game.creeps)) {
+                console.log(name, Memory.creeps[name], (name in Game.creeps))
+                this.removeFromMemory(name, Memory.creeps[name].role)
+            }
+        }
 
         this.save()
     }
 }
 
-// const spawns: { [spawnName: string]: StructureSpawn } = Game.spawns
 // const structures: { [structureName: string]: Structure } = Game.structures
-
-// • Find other energy sources if this one is taken
-// • Queue priority directions that override roles
-// • Harvesters and Builders?...
-// • Setting intent via creep memory to it only has to look
-//       up "what to do" every so often
-// • Prioritization or formula of base building
-//       Do X until Y, then A until B
-
-// ASK HOW MANY CREEPS THERE ARE
-// SET CREEP CENSUS LEVEL BASED ON
-// REQUEST MORE FROM GARRISON IF NECESSARY
-// CHECK IF BUILDINGS NEED REPAIR
-// SET PRIORITY BASED ON STATE OF THE ROOM
-
 // Towers do tower things, and so on
 // for (const id in structures) {
 //     const structure: Structure = structures[id]
@@ -157,17 +151,4 @@ export default class Base {
 //             break
 //     }
 
-// }
-
-// Based on Controller level? Total energy available? LVL of each role to x1 x2 x3... roles
-//       Based on need? Change roles based on what's needed and keep everyone fairly generlized
-//       Based on room? Do this whole loop per room? Or operate the whole thing together
-// room.memory.census = room.memory.census || censusConfig
-// Room should know it's plan
-// Room should know the creeps in it
-// Room should tell the spawn to add a new creep if needed
-// Creep management (e.g., numbers and spawning)
-// for (const id in spawns) {
-//     const spawn = spawns[id]
-//     garrison.run(spawn)
 // }

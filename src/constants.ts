@@ -11,13 +11,13 @@ export const censusDefaults: Census = {
 export const creepRecipes: CreepRecipe = {
     HARVESTER: {
         ZERO: [],
-        SMALL: [WORK, CARRY, MOVE],
+        SMALL: [WORK, WORK, CARRY, MOVE],
         MEDIUM: [WORK, WORK, CARRY, CARRY, MOVE, MOVE],
         LARGE: [WORK, WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE]
     },
     BUILDER: {
         ZERO: [],
-        SMALL: [WORK, CARRY, MOVE],
+        SMALL: [WORK, WORK, CARRY, MOVE],
         MEDIUM: [WORK, WORK, WORK, CARRY, CARRY, MOVE],
         LARGE: [WORK, WORK, WORK, WORK, CARRY, CARRY, CARRY, CARRY, MOVE]
     },
@@ -41,3 +41,4 @@ export const partCost: {
     heal: 250,
     claim: 600
 }
+
