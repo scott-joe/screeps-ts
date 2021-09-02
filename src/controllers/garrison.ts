@@ -16,6 +16,7 @@ export class Garrison {
         const name: string = `${role}-${Game.time}`
         const body = creepRecipes[role][this.baseSize]
         console.log(name, body)
+        console.log(`🟢 Attempting to Spawn ${role}`)
 
         return this.spawn.spawnCreep(body, name, {
             memory: { role }
@@ -23,9 +24,10 @@ export class Garrison {
     }
 
     public generateSpawnQueue(size: any): CreepRole[] {
+        console.log(`🟢 Generating Spawn Queue for ${this.spawn.room.name}`)
         const HARVESTER_FREQUENCY = 5
         const BUILDER_FREQUENCY = 2
-        const output = []
+        const output = [CreepRole.HARVESTER]
 
         for (let i = 1; i <= size; i++) {
             if (i % HARVESTER_FREQUENCY === 0) {
@@ -52,10 +54,20 @@ export class Garrison {
         return this.census[role].cur < this.census[role].min
     }
 
-    public recruit(newRole: CreepRole): boolean {
-        if (this.canSpawn(newRole) && this.shouldSpawn(newRole)) {
-            return this.spawnCreep(newRole) === 0 ? true : false
+    public recruit(role: CreepRole): boolean {
+        if (this.canSpawn(role) && this.shouldSpawn(role)) {
+            console.log(`🟢 Can & Should Recruit ${role}`)
+            const result = this.spawnCreep(role)
+
+            if (result === 0) {
+                console.log(`🟢 Successfuly spawned ${role}`)
+            } else {
+                console.log(`🔴 Spawning error ${result} for ${role}`)
+            }
+
+            return result === 0 ? true : false
         } else {
+            console.log(`🔴 Can't or Shouldn't Recruit ${role}`)
             return false
         }
     }

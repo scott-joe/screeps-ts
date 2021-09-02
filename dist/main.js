@@ -3285,7 +3285,7 @@ var builder = {
                 });
             }
         }
-        if (sites.length > 0 && creep.store.getFreeCapacity() === 0) {
+        else if (sites.length > 0 && creep.store.getFreeCapacity() === 0) {
             creep.say('🚧 build');
             if (creep.build(sites[0]) === ERR_NOT_IN_RANGE) {
                 creep.moveTo(sites[0], {
@@ -3293,7 +3293,7 @@ var builder = {
                 });
             }
         }
-        if (sites.length === 0 && creep.store.getFreeCapacity() === 0) {
+        else if (sites.length === 0 && creep.store.getFreeCapacity() === 0) {
             creep.say('⚡ upgrade');
             if (creep.room.controller) {
                 if (creep.upgradeController(creep.room.controller) ===
@@ -3402,14 +3402,16 @@ class Garrison {
         const name = `${role}-${Game.time}`;
         const body = creepRecipes[role][this.baseSize];
         console.log(name, body);
+        console.log(`🟢 Attempting to Spawn ${role}`);
         return this.spawn.spawnCreep(body, name, {
             memory: { role }
         });
     }
     generateSpawnQueue(size) {
+        console.log(`🟢 Generating Spawn Queue for ${this.spawn.room.name}`);
         const HARVESTER_FREQUENCY = 5;
         const BUILDER_FREQUENCY = 2;
-        const output = [];
+        const output = [CreepRole.HARVESTER];
         for (let i = 1; i <= size; i++) {
             if (i % HARVESTER_FREQUENCY === 0) {
                 output.push(CreepRole.HARVESTER);
@@ -3431,11 +3433,20 @@ class Garrison {
     shouldSpawn(role) {
         return this.census[role].cur < this.census[role].min;
     }
-    recruit(newRole) {
-        if (this.canSpawn(newRole) && this.shouldSpawn(newRole)) {
-            return this.spawnCreep(newRole) === 0 ? true : false;
+    recruit(role) {
+        if (this.canSpawn(role) && this.shouldSpawn(role)) {
+            console.log(`🟢 Can & Should Recruit ${role}`);
+            const result = this.spawnCreep(role);
+            if (result === 0) {
+                console.log(`🟢 Successfuly spawned ${role}`);
+            }
+            else {
+                console.log(`🔴 Spawning error ${result} for ${role}`);
+            }
+            return result === 0 ? true : false;
         }
         else {
+            console.log(`🔴 Can't or Shouldn't Recruit ${role}`);
             return false;
         }
     }
@@ -3443,6 +3454,7 @@ class Garrison {
 
 // TODO: CENSUS HAS NO WAY TO REMOVE CREEPS
 // TODO: CREEPS DON'T KNOW TO GO TO ANOTHER ENERGY SOURCE WHEN ONE IS FULL
+// TODO: CREEPS COLLECT ENERGY LAYING ON THE GROUND
 class Base {
     constructor(room) {
         this.room = room;
@@ -3450,7 +3462,7 @@ class Base {
         this.memory = this.room.memory;
         this.baseSize = this.calculateBaseSize();
         this.census = this.memory.census || censusDefaults;
-        this.spawnQueue = this.memory.spawnQueue || [CreepRole.HARVESTER];
+        this.spawnQueue = this.memory.spawnQueue || [];
         this.garrison = new Garrison(this.spawns[0], this.census, this.baseSize);
     }
     applyCreepRoleBehavior() {
@@ -3487,13 +3499,29 @@ class Base {
                 return Size.ZERO;
         }
     }
-    updateState(role) {
+    updateCensus(role) {
         this.spawnQueue.shift();
         this.census[role].cur += 1;
     }
     save() {
         this.memory.spawnQueue = this.spawnQueue;
         this.memory.census = this.census;
+    }
+    cleanMemory() {
+        for (const name in Memory.creeps) {
+            if (!(name in Game.creeps)) {
+                const creep = Game.creeps[name];
+                const role = creep.memory.role;
+                const count = this.memory.census[role].cur;
+                console.log(`Removing ${name} from Memory`);
+                this.memory.census[role].cur = count - 1;
+                delete Memory.creeps[name];
+            }
+        }
+    }
+    isSpawning(spawn) {
+        // Will be a creep object if spawning and null if not
+        return spawn.spawning !== null;
     }
     main() {
         // Make sure the Base has a spawn queue
@@ -3504,16 +3532,21 @@ class Base {
         // Recruit new creep and add to census
         for (const id in this.spawns) {
             const spawn = this.spawns[id];
-            // Will be a creep object if spawning and null if not
-            if (spawn.spawning === null) {
+            if (!this.isSpawning(spawn)) {
                 const role = this.spawnQueue[0];
+                console.log(`🟢 Attempting to Recruit ${role}`);
                 const result = this.garrison.recruit(role);
                 if (result) {
-                    this.updateState(role);
+                    console.log(`🟢 Updating Census for ${role}`);
+                    this.updateCensus(role);
                 }
+            }
+            else {
+                console.log(`🔴 Spawn busy`);
             }
         }
         this.applyCreepRoleBehavior();
+        this.cleanMemory();
         this.save();
     }
 }
@@ -3559,13 +3592,6 @@ const loop = ErrorMapper.wrapLoop(() => {
     // Initialize each room's AI
     for (const id in Game.rooms) {
         new Base(Game.rooms[id]).main();
-    }
-    // Memory cleanup
-    for (const name in Memory.creeps) {
-        if (!(name in Game.creeps)) {
-            console.log(`Removing ${name} from Memory`);
-            delete Memory.creeps[name];
-        }
     }
 });
 

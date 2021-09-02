@@ -25,7 +25,7 @@ export default class Base {
         this.memory = this.room.memory
         this.baseSize = this.calculateBaseSize()
         this.census = this.memory.census || censusDefaults
-        this.spawnQueue = this.memory.spawnQueue || [CreepRole.HARVESTER]
+        this.spawnQueue = this.memory.spawnQueue || []
         this.garrison = new Garrison(this.spawns[0], this.census, this.baseSize)
     }
 
@@ -67,7 +67,7 @@ export default class Base {
         }
     }
 
-    private updateState(role: CreepRole): void {
+    private updateCensus(role: CreepRole): void {
         this.spawnQueue.shift()
         this.census[role].cur += 1
     }
@@ -93,7 +93,7 @@ export default class Base {
 
     private isSpawning(spawn: StructureSpawn): boolean {
         // Will be a creep object if spawning and null if not
-        return spawn.spawning === null
+        return spawn.spawning !== null
     }
 
     public main(): void {
@@ -109,8 +109,14 @@ export default class Base {
 
             if (!this.isSpawning(spawn)) {
                 const role: CreepRole = this.spawnQueue[0]
+                console.log(`🟢 Attempting to Recruit ${role}`)
                 const result = this.garrison.recruit(role)
-                if (result) this.updateState(role)
+                if (result) {
+                    console.log(`🟢 Updating Census for ${role}`)
+                    this.updateCensus(role)
+                }
+            } else {
+                console.log(`🔴 Spawn busy`)
             }
         }
 
