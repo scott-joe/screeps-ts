@@ -46,30 +46,29 @@ export default class Base {
     }
 
     private calculateBaseSize(): Size {
+        const capacity: number = this.room.energyCapacityAvailable
         switch (true) {
-            case this.room.energyCapacityAvailable === 300:
-                return Size.SMALL
-            case this.room.energyCapacityAvailable === 550:
-                return Size.MEDIUM
-            case this.room.energyCapacityAvailable === 800:
-            case this.room.energyCapacityAvailable === 1200:
-            case this.room.energyCapacityAvailable === 1600:
-            case this.room.energyCapacityAvailable === 2000:
-            case this.room.energyCapacityAvailable === 2400:
-            case this.room.energyCapacityAvailable === 2600:
+            case capacity >= 2600:
                 return Size.LARGE
+            case capacity >= 550:
+                return Size.MEDIUM
+            case capacity >= 300:
             default:
                 return Size.SMALL
         }
     }
 
     private removeFromCensus(role: CreepRole): void {
+        // Put this creep's role back at the front of the queue
         this.spawnQueue.unshift(role)
+        // Remove them from the census
         this.census[role].cur -= 1
     }
 
     private addToCensus(role: CreepRole): void {
+        // Remove the creep's role from the queue
         this.spawnQueue.shift()
+        // Add them to the census
         this.census[role].cur += 1
     }
 
@@ -98,7 +97,7 @@ export default class Base {
     }
 
     private removeFromMemory(name: string, role: CreepRole) {
-        if(delete Memory.creeps[name]) {
+        if (delete Memory.creeps[name]) {
             console.log(`🔶 Removing ${name} from Memory & Census`)
             this.removeFromCensus(role)
         }

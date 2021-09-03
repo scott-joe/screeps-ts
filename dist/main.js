@@ -3459,9 +3459,17 @@ class Garrison {
         return this.spawn.store.energy >= cost;
     }
     shouldSpawn(role, census) {
+<<<<<<< Updated upstream
         return census[role].cur < census[role].min;
     }
     recruit(role, census) {
+=======
+        // console.log(`${role}: ${census[role].cur} < ${census[role].min}`)
+        return census[role].cur < census[role].min;
+    }
+    recruit(role, census) {
+        // console.log(`${this.canSpawn(role)} && ${this.shouldSpawn(role, census)}`)
+>>>>>>> Stashed changes
         if (this.canSpawn(role) && this.shouldSpawn(role, census)) {
             console.log(`🟢 Can & Should Recruit ${role}`);
             const result = this.spawnCreep(role);

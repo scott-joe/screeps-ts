@@ -1,15 +1,17 @@
+import { Activity } from "types/main"
+
 export default {
     run(creep: Creep) {
-        if (creep.memory.upgrading && creep.store[RESOURCE_ENERGY] === 0) {
-            creep.memory.upgrading = false
+        if (creep.memory.activity === Activity.upgrading && creep.store[RESOURCE_ENERGY] === 0) {
+            creep.memory.activity === Activity.upgrading = false
             creep.say('🔄 harvest')
         }
-        if (!creep.memory.upgrading && creep.store.getFreeCapacity() === 0) {
-            creep.memory.upgrading = true
+        if (!creep.memory.activity === Activity.upgrading && creep.store.getFreeCapacity() === 0) {
+            creep.memory.activity === Activity.upgrading = true
             creep.say('⚡ upgrade')
         }
 
-        if (creep.memory.upgrading) {
+        if (creep.memory.activity === Activity.upgrading) {
             if (creep.room.controller) {
                 if (
                     creep.upgradeController(creep.room.controller) ===
