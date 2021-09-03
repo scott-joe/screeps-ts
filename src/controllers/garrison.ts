@@ -24,13 +24,17 @@ export class Garrison {
         console.log(`🟢 Generating Spawn Queue for ${this.spawn.room.name}`)
         const HARVESTER_FREQUENCY = 5
         const BUILDER_FREQUENCY = 2
+        const UPGRADER_FREQUENCY = 8
         const output = [CreepRole.HARVESTER]
+        const RCL = this.spawn.room.controller?.level!
 
         for (let i = 1; i <= size; i++) {
             if (i % HARVESTER_FREQUENCY === 0) {
                 output.push(CreepRole.HARVESTER)
             } else if (i % BUILDER_FREQUENCY === 0) {
                 output.push(CreepRole.BUILDER)
+            } else if (RCL > 1 && i % UPGRADER_FREQUENCY === 0) {
+                output.push(CreepRole.UPGRADER)
             }
         }
 
@@ -48,12 +52,10 @@ export class Garrison {
     }
 
     private shouldSpawn(role: CreepRole, census: Census): boolean {
-        console.log(`${role}: ${census[role].cur} < ${census[role].min}`)
         return census[role].cur < census[role].min
     }
 
     public recruit(role: CreepRole, census: Census): boolean {
-        console.log(`${this.canSpawn(role)} && ${this.shouldSpawn(role, census)}`)
         if (this.canSpawn(role) && this.shouldSpawn(role, census)) {
             console.log(`🟢 Can & Should Recruit ${role}`)
             const result = this.spawnCreep(role)

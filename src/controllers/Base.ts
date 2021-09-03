@@ -3,6 +3,8 @@ import { harvester, builder } from 'roles'
 import { Census, CreepRole, Size } from 'types/main'
 import { Garrison } from './Garrison'
 
+// TODO: IF THERE ARE NO SPAWNS THAT NEED ENERGY, UPGRADE RC
+
 export default class Base {
     private room: Room
     private spawns: StructureSpawn[]
@@ -44,26 +46,26 @@ export default class Base {
     }
 
     private calculateBaseSize(): Size {
-        switch (this.room.controller?.level) {
-            case 1:
-            case 2:
+        switch (true) {
+            case this.room.energyCapacityAvailable === 300:
                 return Size.SMALL
-            case 3:
-            case 4:
-            case 5:
-            case 6:
+            case this.room.energyCapacityAvailable === 550:
                 return Size.MEDIUM
-            case 7:
-            case 8:
+            case this.room.energyCapacityAvailable === 800:
+            case this.room.energyCapacityAvailable === 1200:
+            case this.room.energyCapacityAvailable === 1600:
+            case this.room.energyCapacityAvailable === 2000:
+            case this.room.energyCapacityAvailable === 2400:
+            case this.room.energyCapacityAvailable === 2600:
                 return Size.LARGE
             default:
-                return Size.ZERO
+                return Size.SMALL
         }
     }
 
     private removeFromCensus(role: CreepRole): void {
         this.spawnQueue.unshift(role)
-        this.census[role].cur += 1
+        this.census[role].cur -= 1
     }
 
     private addToCensus(role: CreepRole): void {
@@ -74,6 +76,14 @@ export default class Base {
     private save() {
         this.memory.spawnQueue = this.spawnQueue
         this.memory.census = this.census
+
+        if (Game.time % 50 === 0) {
+            console.log('---- Census ----')
+            for (const role in this.memory.census) {
+                console.log(`${role}: ${this.memory.census[role].cur}`)
+            }
+            console.log('----------------')
+        }
     }
 
     private rebuildCensus(): void {
@@ -108,7 +118,6 @@ export default class Base {
 
         // Recruit new creep and add to census
         for (const id in this.spawns) {
-            console.log(Game.time)
             const spawn = this.spawns[id]
 
             if (!this.isSpawning(spawn)) {
@@ -128,7 +137,6 @@ export default class Base {
 
         for (const name in Memory.creeps) {
             if (!(name in Game.creeps)) {
-                console.log(name, Memory.creeps[name], (name in Game.creeps))
                 this.removeFromMemory(name, Memory.creeps[name].role)
             }
         }

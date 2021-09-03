@@ -3,6 +3,7 @@ import { Activity } from "types/main"
 export default {
     run(creep: Creep): void {
         const sites = creep.room.find(FIND_CONSTRUCTION_SITES)
+        // TODO: IS RC FLASHING?, GO UPGRADE TO KEEP IT FROM FALLING RCL
 
         if (creep.store[RESOURCE_ENERGY] === 0) {
             creep.memory.activity = Activity.HARVEST
