@@ -1,4 +1,4 @@
-import { CreepRecipe, Census } from 'types/main'
+import { CreepTemplateList, Census } from 'types/main'
 
 export const minTTL = 500
 
@@ -8,27 +8,23 @@ export const censusDefaults: Census = {
     SOLDIER: { min: 0, cur: 0 }
 }
 
-export const creepRecipes: CreepRecipe = {
+export const creepTemplates: CreepTemplateList = {
     HARVESTER: {
-        ZERO: [],
         SMALL: [WORK, WORK, CARRY, MOVE],
         MEDIUM: [WORK, WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE],
         LARGE: [WORK, WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE]
     },
     BUILDER: {
-        ZERO: [],
         SMALL: [WORK, WORK, CARRY, MOVE],
         MEDIUM: [WORK, WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE],
         LARGE: [WORK, WORK, WORK, WORK, CARRY, CARRY, CARRY, CARRY, MOVE]
     },
     UPGRADER: {
-        ZERO: [],
         SMALL: [WORK, WORK, CARRY, MOVE],
         MEDIUM: [WORK, WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE],
         LARGE: [WORK, WORK, WORK, WORK, CARRY, CARRY, CARRY, CARRY, MOVE]
     },
     SOLDIER: {
-        ZERO: [],
         SMALL: [HEAL, MOVE, TOUGH, MOVE, ATTACK],
         MEDIUM: [HEAL, MOVE, TOUGH, MOVE, ATTACK, ATTACK],
         LARGE: [HEAL, TOUGH, TOUGH, MOVE, MOVE, MOVE, ATTACK, ATTACK]

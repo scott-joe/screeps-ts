@@ -1,5 +1,6 @@
 import { Activity } from "types/main"
 
+
 export default {
     run(creep: Creep): void {
         const sites = creep.room.find(FIND_CONSTRUCTION_SITES)
@@ -18,19 +19,20 @@ export default {
         if (creep.memory.activity === Activity.HARVEST) {
             const sources = creep.room.find(FIND_SOURCES)
             if (creep.harvest(sources[0]) === ERR_NOT_IN_RANGE) {
+                console.log(`Builder running ${Activity.HARVEST}`)
                 creep.moveTo(sources[0], {
                     visualizePathStyle: { stroke: '#ffaa00' }
                 })
             }
         } else if (creep.memory.activity === Activity.BUILD) {
-            // creep.say('🚧 build')
+            console.log(`Builder running ${Activity.BUILD}`)
             if (creep.build(sites[0]) === ERR_NOT_IN_RANGE) {
                 creep.moveTo(sites[0], {
                     visualizePathStyle: { stroke: '#ffffff' }
                 })
             }
         } else if (creep.memory.activity === Activity.UPGRADE) {
-            // creep.say('⚡ upgrade')
+            console.log(`Builder running ${Activity.UPGRADE}`)
             if (creep.room.controller) {
                 if (
                     creep.upgradeController(creep.room.controller) ===

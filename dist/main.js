@@ -3331,13 +3331,14 @@ var builder = {
         if (creep.memory.activity === Activity.HARVEST) {
             const sources = creep.room.find(FIND_SOURCES);
             if (creep.harvest(sources[0]) === ERR_NOT_IN_RANGE) {
+                console.log(`Builder running ${Activity.HARVEST}`);
                 creep.moveTo(sources[0], {
                     visualizePathStyle: { stroke: '#ffaa00' }
                 });
             }
         }
         else if (creep.memory.activity === Activity.BUILD) {
-            // creep.say('🚧 build')
+            console.log(`Builder running ${Activity.BUILD}`);
             if (creep.build(sites[0]) === ERR_NOT_IN_RANGE) {
                 creep.moveTo(sites[0], {
                     visualizePathStyle: { stroke: '#ffffff' }
@@ -3345,7 +3346,7 @@ var builder = {
             }
         }
         else if (creep.memory.activity === Activity.UPGRADE) {
-            // creep.say('⚡ upgrade')
+            console.log(`Builder running ${Activity.UPGRADE}`);
             if (creep.room.controller) {
                 if (creep.upgradeController(creep.room.controller) ===
                     ERR_NOT_IN_RANGE) {
@@ -3459,17 +3460,9 @@ class Garrison {
         return this.spawn.store.energy >= cost;
     }
     shouldSpawn(role, census) {
-<<<<<<< Updated upstream
         return census[role].cur < census[role].min;
     }
     recruit(role, census) {
-=======
-        // console.log(`${role}: ${census[role].cur} < ${census[role].min}`)
-        return census[role].cur < census[role].min;
-    }
-    recruit(role, census) {
-        // console.log(`${this.canSpawn(role)} && ${this.shouldSpawn(role, census)}`)
->>>>>>> Stashed changes
         if (this.canSpawn(role) && this.shouldSpawn(role, census)) {
             console.log(`🟢 Can & Should Recruit ${role}`);
             const result = this.spawnCreep(role);
@@ -3488,6 +3481,7 @@ class Garrison {
     }
 }
 
+// TODO: IF THERE ARE NO SPAWNS THAT NEED ENERGY, UPGRADE RC
 class Base {
     constructor(room) {
         this.room = room;
@@ -3515,28 +3509,27 @@ class Base {
         }
     }
     calculateBaseSize() {
+        const capacity = this.room.energyCapacityAvailable;
         switch (true) {
-            case this.room.energyCapacityAvailable === 300:
-                return Size.SMALL;
-            case this.room.energyCapacityAvailable === 550:
-                return Size.MEDIUM;
-            case this.room.energyCapacityAvailable === 800:
-            case this.room.energyCapacityAvailable === 1200:
-            case this.room.energyCapacityAvailable === 1600:
-            case this.room.energyCapacityAvailable === 2000:
-            case this.room.energyCapacityAvailable === 2400:
-            case this.room.energyCapacityAvailable === 2600:
+            case capacity >= 2600:
                 return Size.LARGE;
+            case capacity >= 550:
+                return Size.MEDIUM;
+            case capacity >= 300:
             default:
                 return Size.SMALL;
         }
     }
     removeFromCensus(role) {
+        // Put this creep's role back at the front of the queue
         this.spawnQueue.unshift(role);
+        // Remove them from the census
         this.census[role].cur -= 1;
     }
     addToCensus(role) {
+        // Remove the creep's role from the queue
         this.spawnQueue.shift();
+        // Add them to the census
         this.census[role].cur += 1;
     }
     save() {

@@ -1,5 +1,5 @@
 import { Census, CreepRole, Size } from 'types/main'
-import { creepRecipes, partCost } from '../constants'
+import { creepTemplates, partCost } from '../constants'
 
 export class Garrison {
     private spawn: StructureSpawn
@@ -10,9 +10,44 @@ export class Garrison {
         this.baseSize = baseSize
     }
 
+    private generateCreepRecipe(template: BodyPartConstant[], energy: number): BodyPartConstant[] {
+        let parts: BodyPartConstant[] = []
+
+        while (energy > 0 && parts.length < 50) {
+            // GET NEXT PART IN THE TEMPLATE
+          let next = template[parts.length % template.length] // returns 0...2
+
+          // NEXT PART TOO EXPENSIVE
+          if (BODYPART_COST[next] > energy) {
+            // REMOVE THE EXPENSIVE ITEM FROM THE TEMPLATE
+            const start = template.indexOf(next) + 1
+            const remainingTemplate = template.slice(start, template.length)
+            // IF THERE'S ANYTHING LEFT IN THE LIST, TRY AGAIN
+            if (remainingTemplate.length > 0) {
+              // RUN THIS FUNCTION FOR REMAINING ITEMS IN THE TEMPLATE
+              const result = this.generateCreepRecipe(remainingTemplate, energy)
+                //   ADD THE NEW SUB-ARRAY OF PARTS TO THE END OF THIS LIST
+              parts = parts.concat(result)
+            }
+
+            // CLEAN UP THE REMAINDER ENERGY
+            energy -= energy
+          } else {
+            // ADD PART AND SUBTRACT THE ENERGY COST FROM REMAINING ENERGY
+            energy -= BODYPART_COST[next]
+            parts.push(next)
+          }
+        }
+
+        // SORT PARTS BASED ON ORIGINAL TEMPLATE?
+        //  FILTER PARTS INTO SUB-ARRAYS AND THEN CONCAT THEM BACK TOGETHER?
+        return parts
+      }
+
     private spawnCreep(role: CreepRole): ScreepsReturnCode {
         const name: string = `${role}-${Game.time}`
-        const body = creepRecipes[role][this.baseSize]
+        const template: BodyPartConstant[] = creepTemplates[role][this.baseSize]
+        const body = this.generateCreepRecipe(template, this.spawn.store[RESOURCE_ENERGY])
         console.log(`🟢 Attempting to Spawn ${role}`, name, body)
 
         return this.spawn.spawnCreep(body, name, {
@@ -28,7 +63,7 @@ export class Garrison {
         const output = [CreepRole.HARVESTER]
         const RCL = this.spawn.room.controller?.level!
 
-        for (let i = 1; i <= size; i++) {
+        for (let i = 1 i <= size i++) {
             if (i % HARVESTER_FREQUENCY === 0) {
                 output.push(CreepRole.HARVESTER)
             } else if (i % BUILDER_FREQUENCY === 0) {
@@ -42,7 +77,7 @@ export class Garrison {
     }
 
     private canSpawn(role: CreepRole): boolean {
-        const recipe: BodyPartConstant[] = creepRecipes[role][this.baseSize]
+        const recipe: BodyPartConstant[] = creepTemplates[role][this.baseSize]
         const reducer = (acc: number, part: BodyPartConstant) => {
             return acc + partCost[part]
         }

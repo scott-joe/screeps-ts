@@ -33,15 +33,14 @@ export enum Strategy {
 }
 
 export enum Size {
-    ZERO = 'ZERO',
     SMALL = 'SMALL',
     MEDIUM = 'MEDIUM',
     LARGE = 'LARGE'
 }
 
-export type CreepRecipe = {
+export type CreepTemplateList = {
     [property in CreepRole]: {
-        [property in Size]: Array<BodyPartConstant>
+        [property in Size]: BodyPartConstant[]
     }
 }
 
