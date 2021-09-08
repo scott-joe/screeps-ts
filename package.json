@@ -10,6 +10,7 @@
         "prettier": "prettier --check \"**/*.+(ts)\"",
         "prettier:fix": "prettier --write \"**/*.+(ts)\"",
         "build": "rollup -c",
+        "push-manual": "yarn build && cat ./dist/main.js | pbcopy",
         "push-main": "rollup -c --environment DEST:main",
         "push-pserver": "rollup -c --environment DEST:pserver",
         "push-season": "rollup -c --environment DEST:season",

@@ -65,36 +65,21 @@ export default class Base {
         this.census[role].cur -= 1
     }
 
-    private addToCensus(role: CreepRole): void {
-        // Remove the creep's role from the queue
-        this.spawnQueue.shift()
-        // Add them to the census
-        this.census[role].cur += 1
-    }
-
     private save() {
         this.memory.spawnQueue = this.spawnQueue
         this.memory.census = this.census
-
-        if (Game.time % 50 === 0) {
-            console.log('---- Census ----')
-            for (const role in this.memory.census) {
-                console.log(`${role}: ${this.memory.census[role].cur}`)
-            }
-            console.log('----------------')
-        }
     }
 
-    private rebuildCensus(): void {
-        const census = censusDefaults
+    // private rebuildCensus(): void {
+    //     const census = censusDefaults
 
-        for (const name in Memory.creeps) {
-            const role: CreepRole = Game.creeps[name].memory.role
-            census[role].cur++
-        }
+    //     for (const name in Memory.creeps) {
+    //         const role: CreepRole = Game.creeps[name].memory.role
+    //         census[role].cur++
+    //     }
 
-        this.census = census
-    }
+    //     this.census = census
+    // }
 
     private removeFromMemory(name: string, role: CreepRole) {
         if (delete Memory.creeps[name]) {
@@ -110,25 +95,16 @@ export default class Base {
 
     public main(): void {
         // Make sure the Base has a spawn queue
-        this.spawnQueue =
-            this.spawnQueue.length > 0
-                ? this.spawnQueue
-                : this.garrison.generateSpawnQueue(100)
+        this.spawnQueue = this.spawnQueue.length > 0 ? this.spawnQueue : this.garrison.generateSpawnQueue(this.census)
 
         // Recruit new creep and add to census
         for (const id in this.spawns) {
             const spawn = this.spawns[id]
 
+            // Is the Spawn busy?
             if (!this.isSpawning(spawn)) {
                 const role: CreepRole = this.spawnQueue[0]
-                // console.log(`🟢 Attempting to Recruit ${role}`)
-                const result = this.garrison.recruit(role, this.census)
-                if (result) {
-                    console.log(`🟢 Updating Census for ${role}`)
-                    this.addToCensus(role)
-                }
-            } else {
-                // console.log(`🔴 Spawn busy`)
+                this.garrison.recruit(role, this.census, this.spawnQueue)
             }
         }
 
@@ -148,14 +124,12 @@ export default class Base {
 // Towers do tower things, and so on
 // for (const id in structures) {
 //     const structure: Structure = structures[id]
-
+//
 //     switch (structure.structureType) {
 //         case STRUCTURE_TOWER:
 //             guard.run(structure)
 //             break
-
 //         default:
 //             break
 //     }
-
 // }

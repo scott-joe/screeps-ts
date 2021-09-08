@@ -1,12 +1,13 @@
 export type CensusStatus = {
     min: number
     cur: number
+    unlock: number
 }
 
 export enum CreepRole {
     HARVESTER = 'HARVESTER',
     BUILDER = 'BUILDER',
-    UPGRADER = 'UPGRADER',
+    MAINTAINER = 'MAINTAINER',
     SOLDIER = 'SOLDIER'
 }
 
@@ -38,9 +39,26 @@ export enum Size {
     LARGE = 'LARGE'
 }
 
+export enum RecipeStyle {
+    STRIPED = 'STRIPED',
+    FLAT = 'FLAT'
+}
+
+export type CreepAction {
+    BASE: BodyPartConstant
+    HARVEST: BodyPartConstant
+    BUILD: BodyPartConstant
+    MAINTAIN: BodyPartConstant
+    FIGHT: BodyPartConstant
+    SHOOT: BodyPartConstant
+    HEAL: BodyPartConstant
+    SCOUT: BodyPartConstant
+    RUN: BodyPartConstant
+}
+
 export type CreepTemplateList = {
     [property in CreepRole]: {
-        [property in Size]: BodyPartConstant[]
+        [property in Size]: creepActions[]
     }
 }
 
@@ -71,7 +89,7 @@ declare global {
     }
 
     interface RoomMemory {
-        census: { [x: string]: { min: number; cur: number } }
+        census: Census
         spawnQueue: CreepRole[]
         creepId: number
     }

@@ -18,17 +18,19 @@ export default {
             }
 
             // if there are any, move there
-            if (targets.length !== 0){
+            if (targets.length !== 0) {
                 const target = targets[0]
                 // @ts-ignore
-                if(target.store.getFreeCapacity(RESOURCE_ENERGY) > 0) {
+                if (target.store.getFreeCapacity(RESOURCE_ENERGY) > 0) {
                     if (creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-                        creep.moveTo(target, {visualizePathStyle: { stroke: '#ffffff' }})
+                        creep.moveTo(target, {
+                            visualizePathStyle: { stroke: '#ffffff' }
+                        })
                     }
                 }
-            // } else {
-            //     // GO FIND SOMETHING TO BUILD
-            //     builder.run(creep)
+                // } else {
+                //     // GO FIND SOMETHING TO BUILD
+                //     builder.run(creep)
             }
         }
     }
