@@ -1,16 +1,17 @@
-import { Census, CreepRole, Size } from 'types/main'
+import { Census, CreepRole } from 'types/main'
 import { creepTemplates } from '../constants'
-
-// RC1 - HARVESTER, HARVESTER, BUILDER, BUILDER, BUILDER, BUILDER
-// RC2 - MAINTAINER, MAINTAINER
 
 export class Garrison {
     private spawn: StructureSpawn
-    private baseSize: Size
+    private controllerLevel: number
+    private energyAvailable: number
+    private energyCapacity: number
 
-    constructor(spawn: StructureSpawn, baseSize: Size) {
+    constructor(spawn: StructureSpawn) {
         this.spawn = spawn
-        this.baseSize = baseSize
+        this.controllerLevel = spawn.room.controller?.level!
+        this.energyAvailable = spawn.room.energyAvailable
+        this.energyCapacity = spawn.room.energyCapacityAvailable
     }
 
     private generateCreepRecipe(template: BodyPartConstant[], energy: number): BodyPartConstant[] {
@@ -44,30 +45,31 @@ export class Garrison {
 
         // SORT PARTS BASED ON ORIGINAL TEMPLATE?
         //  FILTER PARTS INTO SUB-ARRAYS AND THEN CONCAT THEM BACK TOGETHER?
-        console.log(parts)
         return parts
     }
 
-    private spawnCreep(role: CreepRole): ScreepsReturnCode {
+    private spawnCreep(role: CreepRole): boolean {
         const name: string = `${role}-${Game.time}`
-        const template: BodyPartConstant[] = creepTemplates[role][this.baseSize]
-        const body = this.generateCreepRecipe(template, this.spawn.store[RESOURCE_ENERGY])
+        const template: BodyPartConstant[] = creepTemplates[role]
+        const body = this.generateCreepRecipe(template, this.spawn.room.energyAvailable)
         console.log(`🟢 Attempting to Spawn ${role}`, name, body)
 
-        return this.spawn.spawnCreep(body, name, {
+        const result = this.spawn.spawnCreep(body, name, {
             memory: { role }
         })
+
+        return result === 0 ? true : false
     }
 
     public generateSpawnQueue(census: Census): CreepRole[] {
         const output: CreepRole[] = []
-        const RCL = this.spawn.room.controller?.level!
 
         console.log(`🟢 Generating Spawn Queue for ${this.spawn.room.name}`)
+
         for (const roleId in census) {
             const cfg = census[roleId]
             const role = roleId as CreepRole
-            if (RCL >= cfg.unlock) {
+            if (this.controllerLevel >= cfg.unlock) {
                 output.push(role)
             }
         }
@@ -79,9 +81,9 @@ export class Garrison {
         // Do we have room for another creep of this role?
         const haveRoom = census[role].cur < census[role].min
         // Are we at max energy? So they're the biggest and best they can be?
-        const fullEnergy = this.spawn.store.energy === this.spawn.store.getCapacity(RESOURCE_ENERGY)
+        const atFullEnergy = this.energyAvailable === this.energyCapacity
 
-        return haveRoom && fullEnergy
+        return haveRoom && atFullEnergy
     }
 
     public recruit(role: CreepRole, census: Census, spawnQueue: CreepRole[]): boolean {
@@ -92,7 +94,7 @@ export class Garrison {
             const result = this.spawnCreep(role)
 
             // Did it succeed?
-            if (result === 0) {
+            if (result) {
                 console.log(`🟢 Successfuly spawned ${role}`)
                 // Remove the creep's role from the queue
                 spawnQueue.shift()
@@ -102,7 +104,7 @@ export class Garrison {
                 console.log(`🔴 Spawning error ${result} for ${role}`)
             }
 
-            return result === 0 ? true : false
+            return result
         } else {
             // Don't spawn now
             // console.log(`🔴 Shouldn't Recruit ${role}`)

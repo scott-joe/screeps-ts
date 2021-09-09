@@ -1,6 +1,6 @@
 import { censusDefaults } from '../constants'
 import { harvester, builder } from 'roles'
-import { Census, CreepRole, Size } from 'types/main'
+import { Census, CreepRole } from 'types/main'
 import { Garrison } from './Garrison'
 
 // TODO: IF THERE ARE NO SPAWNS THAT NEED ENERGY, UPGRADE RC
@@ -11,25 +11,25 @@ export default class Base {
     private garrison: Garrison
 
     private memory: RoomMemory
+    // TODO: COULD MOVE SPAWN QUEUE TO ROOM.MEMORY?
     private spawnQueue: CreepRole[]
-    private baseSize: Size
     private census: Census
 
     constructor(room: Room) {
         this.room = room
         this.spawns = this.room.find(FIND_MY_SPAWNS) // <= 3
         this.memory = this.room.memory
-        this.baseSize = this.calculateBaseSize()
         this.census = this.memory.census || censusDefaults
         this.spawnQueue = this.memory.spawnQueue || []
-        this.garrison = new Garrison(this.spawns[0], this.baseSize)
+        this.garrison = new Garrison(this.spawns[0])
     }
 
     private applyCreepRoleBehavior(): void {
-        const creeps: { [creepName: string]: Creep } = Game.creeps
+        const creeps: { [name: string]: Creep } = Game.creeps
         for (const name in creeps) {
             const creep = creeps[name]
 
+            // Creeps show up in the list while spawning...
             if (!creep.spawning) {
                 switch (creep.memory.role) {
                     case CreepRole.HARVESTER:
@@ -38,6 +38,21 @@ export default class Base {
                     case CreepRole.BUILDER:
                         builder.run(creep)
                         break
+                    // case CreepRole.MECHANIC:
+                    //     mechanic.run(creep)
+                    //     break
+                    // case CreepRole.GRUNT:
+                    //     grunt.run(creep)
+                    //     break
+                    // case CreepRole.RANGER:
+                    //     ranger.run(creep)
+                    //     break
+                    // case CreepRole.MEDIC:
+                    //     medic.run(creep)
+                    //     break
+                    // case CreepRole.SCOUT:
+                    //     scout.run(creep)
+                    //     break
                     default:
                         break
                 }
@@ -45,19 +60,7 @@ export default class Base {
         }
     }
 
-    private calculateBaseSize(): Size {
-        const capacity: number = this.room.energyCapacityAvailable
-        switch (true) {
-            case capacity >= 2600:
-                return Size.LARGE
-            case capacity >= 550:
-                return Size.MEDIUM
-            case capacity >= 300:
-            default:
-                return Size.SMALL
-        }
-    }
-
+    // TODO: Move to census.remove
     private removeFromCensus(role: CreepRole): void {
         // Put this creep's role back at the front of the queue
         this.spawnQueue.unshift(role)
@@ -65,22 +68,13 @@ export default class Base {
         this.census[role].cur -= 1
     }
 
+    // TODO: Move use of this up to top level?
     private save() {
         this.memory.spawnQueue = this.spawnQueue
         this.memory.census = this.census
     }
 
-    // private rebuildCensus(): void {
-    //     const census = censusDefaults
-
-    //     for (const name in Memory.creeps) {
-    //         const role: CreepRole = Game.creeps[name].memory.role
-    //         census[role].cur++
-    //     }
-
-    //     this.census = census
-    // }
-
+    // TODO: Move to memory.remove?
     private removeFromMemory(name: string, role: CreepRole) {
         if (delete Memory.creeps[name]) {
             console.log(`🔶 Removing ${name} from Memory & Census`)
@@ -88,6 +82,7 @@ export default class Base {
         }
     }
 
+    // TODO: Move to Base utils?
     private isSpawning(spawn: StructureSpawn): boolean {
         // Will be a creep object if spawning and null if not
         return spawn.spawning !== null
@@ -119,17 +114,3 @@ export default class Base {
         this.save()
     }
 }
-
-// const structures: { [structureName: string]: Structure } = Game.structures
-// Towers do tower things, and so on
-// for (const id in structures) {
-//     const structure: Structure = structures[id]
-//
-//     switch (structure.structureType) {
-//         case STRUCTURE_TOWER:
-//             guard.run(structure)
-//             break
-//         default:
-//             break
-//     }
-// }

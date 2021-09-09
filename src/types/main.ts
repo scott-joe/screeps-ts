@@ -7,19 +7,30 @@ export type CensusStatus = {
 export enum CreepRole {
     HARVESTER = 'HARVESTER',
     BUILDER = 'BUILDER',
-    MAINTAINER = 'MAINTAINER',
-    SOLDIER = 'SOLDIER'
+    MECHANIC = 'MECHANIC',
+    GRUNT = 'GRUNT',
+    RANGER = 'RANGER',
+    MEDIC = 'MEDIC',
+    SCOUT = 'SCOUT'
 }
 
-export enum Activity {
+export enum CreepActions {
+    BASE = 'BASE',
     HARVEST = 'HARVEST',
     BUILD = 'BUILD',
-    UPGRADE = 'UPGRADE'
+    MAINTAIN = 'MAINTAIN',
+    FIGHT = 'FIGHT',
+    SHOOT = 'SHOOT',
+    HEAL = 'HEAL',
+    SCOUT = 'SCOUT',
+    RUN = 'RUN'
 }
+
 export interface Census {
     [x: string]: CensusStatus
 }
 
+// TODO: USE THIS?
 export enum Division {
     CONSTRUCTION = 'CONSTRUCTION',
     DEFENSE = 'DEFENSE',
@@ -27,39 +38,20 @@ export enum Division {
     RESOURCES = 'RESOURCES'
 }
 
+// TODO: USE THIS?
 export enum Strategy {
     RAID = 'RAID',
     CLOISTER = 'CLOISTER',
     ENTERPRISE = 'ENTERPRISE'
 }
 
-export enum Size {
-    SMALL = 'SMALL',
-    MEDIUM = 'MEDIUM',
-    LARGE = 'LARGE'
-}
-
-export enum RecipeStyle {
+export enum RecipeSort {
     STRIPED = 'STRIPED',
     FLAT = 'FLAT'
 }
 
-export type CreepAction {
-    BASE: BodyPartConstant
-    HARVEST: BodyPartConstant
-    BUILD: BodyPartConstant
-    MAINTAIN: BodyPartConstant
-    FIGHT: BodyPartConstant
-    SHOOT: BodyPartConstant
-    HEAL: BodyPartConstant
-    SCOUT: BodyPartConstant
-    RUN: BodyPartConstant
-}
-
 export type CreepTemplateList = {
-    [property in CreepRole]: {
-        [property in Size]: creepActions[]
-    }
+    [property in CreepRole]: BodyPartConstant[]
 }
 
 declare global {
@@ -81,7 +73,7 @@ declare global {
         room?: string
         role: CreepRole
         division?: Division
-        activity?: Activity
+        activity?: CreepActions
     }
 
     interface Creep {
