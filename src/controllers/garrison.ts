@@ -3,13 +3,11 @@ import { creepTemplates } from '../constants'
 
 export class Garrison {
     private spawn: StructureSpawn
-    private controllerLevel: number
     private energyAvailable: number
     private energyCapacity: number
 
     constructor(spawn: StructureSpawn) {
         this.spawn = spawn
-        this.controllerLevel = spawn.room.controller?.level!
         this.energyAvailable = spawn.room.energyAvailable
         this.energyCapacity = spawn.room.energyCapacityAvailable
     }
@@ -61,16 +59,21 @@ export class Garrison {
         return result === 0 ? true : false
     }
 
-    public generateSpawnQueue(census: Census): CreepRole[] {
+    public generateSpawnQueue(census: Census, controllerLevel: number, condition: Function): CreepRole[] {
         const output: CreepRole[] = []
 
         console.log(`🟢 Generating Spawn Queue for ${this.spawn.room.name}`)
 
         for (const roleId in census) {
+            // Get the config for that role
             const cfg = census[roleId]
+            // Get a typesafe role name
             const role = roleId as CreepRole
-            if (this.controllerLevel >= cfg.unlock) {
-                output.push(role)
+            // If our the creep should spawn yet
+            if (condition(cfg.unlock, controllerLevel)) {
+                for (let i = 1; i <= cfg.min; i++) {
+                    output.push(role)
+                }
             }
         }
 

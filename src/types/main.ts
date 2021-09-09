@@ -83,7 +83,7 @@ declare global {
     interface RoomMemory {
         census: Census
         spawnQueue: CreepRole[]
-        creepId: number
+        controllerLevel: number
     }
 
     interface Room {
