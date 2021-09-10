@@ -98,7 +98,7 @@ export class Garrison {
 
             // Did it succeed?
             if (result) {
-                console.log(`🟢 Successfuly spawned ${role}`)
+                console.log(`🟢 Successfully spawned ${role}`)
                 // Remove the creep's role from the queue
                 spawnQueue.shift()
                 // Add the role to the census

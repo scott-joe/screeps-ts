@@ -17,6 +17,8 @@ export enum CreepRole {
 export enum CreepActions {
     BASE = 'BASE',
     TRANSFER = 'TRANSFER',
+    RENEW = 'RENEW',
+    UPGRADE = 'UPGRADE',
     HARVEST = 'HARVEST',
     BUILD = 'BUILD',
     MAINTAIN = 'MAINTAIN',
@@ -76,11 +78,12 @@ declare global {
         room?: string
         role: CreepRole
         division?: Division
-        action?: Function
+        action?: CreepActions
     }
 
     interface Creep {
         energyFull: Function
+        energyEmpty: Function
         renew: Function
     }
 

@@ -1,5 +1,11 @@
+import { CreepActions } from "types/main"
+
 Creep.prototype.energyFull = function () {
     return this.store[RESOURCE_ENERGY] === this.store.getCapacity(RESOURCE_ENERGY)
+}
+
+Creep.prototype.energyEmpty = function () {
+    return this.store[RESOURCE_ENERGY] === 0
 }
 
 Creep.prototype.renew = function () {

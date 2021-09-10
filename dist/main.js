@@ -5,6 +5,9 @@ Object.defineProperty(exports, '__esModule', { value: true });
 Creep.prototype.energyFull = function () {
     return this.store[RESOURCE_ENERGY] === this.store.getCapacity(RESOURCE_ENERGY);
 };
+Creep.prototype.energyEmpty = function () {
+    return this.store[RESOURCE_ENERGY] === 0;
+};
 Creep.prototype.renew = function () {
     const spawn = this.pos.findClosestByPath(FIND_MY_SPAWNS, {
         filter: (item) => item.store.getUsedCapacity(RESOURCE_ENERGY) > 100
@@ -3318,81 +3321,6 @@ const build = (creep, constructionSite) => {
 // export const findDamagedStructures = (creep:Creep): Array<Structure> => {
 // }
 
-var builder = {
-    run(creep) {
-        var _a, _b, _c;
-        // TODO: FIND BASED ON DIVISION[MILITARY|CIVILIAN]
-        // TODO: PRIORITIZE CONSTRUCTION
-        const constructionSite = creep.room.find(FIND_CONSTRUCTION_SITES)[0];
-        // If about to die, go get renewed
-        if (creep.ticksToLive <= minTTL) {
-            creep.renew();
-            // If we're out of energy, go get more
-        }
-        else if (!creep.energyFull()) {
-            harvest(creep);
-            // If we're full on energy, use it
-        }
-        else if (creep.energyFull()) {
-            const controllerFlashing = ((_a = creep.room.controller) === null || _a === void 0 ? void 0 : _a.ticksToDowngrade) <= downgradeThreshold;
-            // Is the RC about to drop a level?
-            if (controllerFlashing) {
-                // Go give the controller some energy
-                upgrade(creep, (_b = creep.room) === null || _b === void 0 ? void 0 : _b.controller);
-                // We have construction sites
-            }
-            else if (constructionSite) {
-                // Build something
-                build(creep, constructionSite);
-            }
-            else {
-                // Upgrade controller
-                upgrade(creep, (_c = creep.room) === null || _c === void 0 ? void 0 : _c.controller);
-            }
-        }
-    }
-};
-
-// TODO: FIND BASED ON DIVISION[MILITARY|CIVILIAN]
-// TODO: PRIORITIZE CONSTRUCTION
-const transferTargetList = [
-    STRUCTURE_SPAWN,
-    STRUCTURE_EXTENSION,
-    STRUCTURE_CONTAINER,
-    STRUCTURE_STORAGE
-];
-const transferTargetFilter = (item) => {
-    return (transferTargetList.includes(item.structureType) &&
-        // @ts-ignore
-        item.store.getFreeCapacity(RESOURCE_ENERGY) > 0);
-};
-var harvester = {
-    run(creep) {
-        var _a;
-        // If about to die, go get renewed
-        if (creep.ticksToLive <= minTTL) {
-            creep.renew();
-            // If we're out of energy, go get more
-        }
-        else if (!creep.energyFull()) {
-            harvest(creep);
-            // If we're full on energy, use it
-        }
-        else if (creep.energyFull()) {
-            // Find the things a Harvester creep would want to give energy to
-            const transferTarget = creep.room.find(FIND_STRUCTURES, { filter: transferTargetFilter })[0];
-            // If we have some sort of storage that needs energy
-            if (transferTarget) {
-                transfer(creep, transferTarget);
-                // Help upgrade the controller
-            }
-            else {
-                upgrade(creep, (_a = creep.room) === null || _a === void 0 ? void 0 : _a.controller);
-            }
-        }
-    }
-};
-
 var CreepRole;
 (function (CreepRole) {
     CreepRole["HARVESTER"] = "HARVESTER";
@@ -3407,6 +3335,8 @@ var CreepActions;
 (function (CreepActions) {
     CreepActions["BASE"] = "BASE";
     CreepActions["TRANSFER"] = "TRANSFER";
+    CreepActions["RENEW"] = "RENEW";
+    CreepActions["UPGRADE"] = "UPGRADE";
     CreepActions["HARVEST"] = "HARVEST";
     CreepActions["BUILD"] = "BUILD";
     CreepActions["MAINTAIN"] = "MAINTAIN";
@@ -3434,6 +3364,102 @@ var RecipeSort;
     RecipeSort["STRIPED"] = "STRIPED";
     RecipeSort["FLAT"] = "FLAT";
 })(RecipeSort || (RecipeSort = {}));
+
+const { BUILD, HARVEST, UPGRADE, RENEW } = CreepActions;
+// The build method is not instant and complate, so we have to do some state mgmt
+//  to manage the non-binary states between full and empty, but working.
+var builder = {
+    run(creep) {
+        var _a, _b;
+        // TODO: FIND BASED ON DIVISION[MILITARY|CIVILIAN]
+        // TODO: PRIORITIZE CONSTRUCTION
+        const constructionSite = creep.room.find(FIND_CONSTRUCTION_SITES)[0];
+        const downgradeImminent = ((_a = creep.room.controller) === null || _a === void 0 ? void 0 : _a.ticksToDowngrade) <= downgradeThreshold;
+        const controller = (_b = creep.room) === null || _b === void 0 ? void 0 : _b.controller;
+        let action = creep.memory.action || HARVEST;
+        // Triggers to start doing something else
+        if (creep.ticksToLive <= minTTL) {
+            // If you're about to age out,
+            // go get renewed at the neatest Spawn
+            action = RENEW;
+        }
+        else if (action !== HARVEST && creep.energyEmpty()) {
+            // If doing anything other than harvesting, and energy is empty,
+            // go harvest
+            action = HARVEST;
+        }
+        else if (downgradeImminent && !creep.energyEmpty()) {
+            // If controller is flashing and you're not empty,
+            // go add some energy to the controller
+            action = UPGRADE;
+        }
+        else if (action === HARVEST && creep.energyFull()) {
+            // If you're done harvesting,
+            // go build
+            action = BUILD;
+        }
+        // Implement the above decided action
+        if (action === RENEW) {
+            creep.renew();
+        }
+        else if (action === UPGRADE) {
+            upgrade(creep, controller);
+        }
+        else if (action === BUILD && constructionSite) {
+            build(creep, constructionSite);
+        }
+        else if (action === HARVEST) {
+            harvest(creep);
+        }
+        else {
+            upgrade(creep, controller);
+        }
+        // Save the changed action into Memory
+        creep.memory.action = action;
+    }
+};
+
+// TODO: FIND BASED ON DIVISION[MILITARY|CIVILIAN]
+// TODO: PRIORITIZE CONSTRUCTION
+const transferTargetList = [
+    STRUCTURE_SPAWN,
+    STRUCTURE_EXTENSION,
+    STRUCTURE_CONTAINER,
+    STRUCTURE_STORAGE
+];
+const transferTargetFilter = (item) => {
+    return (transferTargetList.includes(item.structureType) &&
+        // @ts-ignore
+        item.store.getFreeCapacity(RESOURCE_ENERGY) > 0);
+};
+// The Transfer method is instant and complete, so we only have to
+//  test to see if they're not full to see if they should gather more.
+var harvester = {
+    run(creep) {
+        var _a;
+        // If about to die, go get renewed
+        if (creep.ticksToLive <= minTTL) {
+            creep.renew();
+            // If we're out of energy, go get more
+        }
+        else if (!creep.energyFull()) {
+            harvest(creep);
+            // If we're full on energy, use it
+        }
+        else {
+            // Find the things a Harvester creep would want to give energy to
+            const transferTarget = creep.room.find(FIND_STRUCTURES, { filter: transferTargetFilter })[0];
+            // If we have some sort of storage that needs energy
+            if (transferTarget) {
+                transfer(creep, transferTarget);
+                // Help upgrade the controller
+            }
+            else {
+                upgrade(creep, (_a = creep.room) === null || _a === void 0 ? void 0 : _a.controller);
+            }
+        }
+    }
+};
 
 class Garrison {
     constructor(spawn) {
@@ -3513,7 +3539,7 @@ class Garrison {
             const result = this.spawnCreep(role);
             // Did it succeed?
             if (result) {
-                console.log(`🟢 Successfuly spawned ${role}`);
+                console.log(`🟢 Successfully spawned ${role}`);
                 // Remove the creep's role from the queue
                 spawnQueue.shift();
                 // Add the role to the census

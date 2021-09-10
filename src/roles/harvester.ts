@@ -17,6 +17,8 @@ const transferTargetFilter = (item: Structure) => {
     )
 }
 
+// The Transfer method is instant and complete, so we only have to
+//  test to see if they're not full to see if they should gather more.
 export default {
     run(creep: Creep) {
         // If about to die, go get renewed
@@ -26,7 +28,7 @@ export default {
         } else if (!creep.energyFull()) {
             harvest(creep)
             // If we're full on energy, use it
-        } else if (creep.energyFull()) {
+        } else {
             // Find the things a Harvester creep would want to give energy to
             const transferTarget: Structure = creep.room.find(FIND_STRUCTURES, { filter: transferTargetFilter })[0]
 
