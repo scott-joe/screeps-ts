@@ -16,6 +16,7 @@ export enum CreepRole {
 
 export enum CreepActions {
     BASE = 'BASE',
+    TRANSFER = 'TRANSFER',
     HARVEST = 'HARVEST',
     BUILD = 'BUILD',
     MAINTAIN = 'MAINTAIN',
@@ -32,10 +33,8 @@ export interface Census {
 
 // TODO: USE THIS?
 export enum Division {
-    CONSTRUCTION = 'CONSTRUCTION',
     DEFENSE = 'DEFENSE',
-    OPERATIONS = 'OPERATIONS',
-    RESOURCES = 'RESOURCES'
+    CIVILIAN = 'CIVILIAN'
 }
 
 // TODO: USE THIS?
@@ -52,6 +51,10 @@ export enum RecipeSort {
 
 export type CreepTemplateList = {
     [property in CreepRole]: BodyPartConstant[]
+}
+
+export type MaintenanceTargetList = {
+    [property in Division]: StructureConstant[]
 }
 
 declare global {
@@ -73,10 +76,11 @@ declare global {
         room?: string
         role: CreepRole
         division?: Division
-        activity?: CreepActions
+        action?: Function
     }
 
     interface Creep {
+        energyFull: Function
         renew: Function
     }
 

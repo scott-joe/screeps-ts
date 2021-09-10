@@ -1,4 +1,4 @@
-import builder from './construction/builder'
-import harvester from './resources/harvester'
+import builder from './builder'
+import harvester from './harvester'
 
 export { builder, harvester }

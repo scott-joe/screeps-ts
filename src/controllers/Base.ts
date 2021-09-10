@@ -1,6 +1,6 @@
 import { censusDefaults } from '../constants'
 import { harvester, builder } from 'roles'
-import { Census, CensusStatus, CreepRole } from 'types/main'
+import { Census, CreepRole } from 'types/main'
 import { Garrison } from './Garrison'
 
 // TODO: IF THERE ARE NO SPAWNS THAT NEED ENERGY, UPGRADE RC
