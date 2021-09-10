@@ -23,7 +23,7 @@ export default {
         if (creep.ticksToLive! <= minTTL) {
             creep.renew()
             // If we're out of energy, go get more
-        } else if (creep.store[RESOURCE_ENERGY] === 0) {
+        } else if (!creep.energyFull()) {
             harvest(creep)
             // If we're full on energy, use it
         } else if (creep.energyFull()) {
