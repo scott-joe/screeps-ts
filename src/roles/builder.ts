@@ -10,10 +10,10 @@ export default {
         // If about to die, go get renewed
         if (creep.ticksToLive! <= minTTL) {
             creep.renew()
-        // If we're out of energy, go get more
+            // If we're out of energy, go get more
         } else if (creep.store[RESOURCE_ENERGY] === 0) {
             harvest(creep)
-        // If we're full on energy, use it
+            // If we're full on energy, use it
         } else if (creep.energyFull()) {
             const controllerFlashing = creep.room.controller?.ticksToDowngrade! <= downgradeThreshold
 
@@ -21,7 +21,7 @@ export default {
             if (controllerFlashing) {
                 // Go give the controller some energy
                 upgrade(creep, creep.room?.controller!)
-            // We have construction sites
+                // We have construction sites
             } else if (constructionSite) {
                 // Build something
                 build(creep, constructionSite)

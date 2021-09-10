@@ -100,7 +100,8 @@ export default class Base {
             // And it's changed since last tick
             if (prevRCL !== curRCL) {
                 // Comparison by which to decide to add the creep role to the queue
-                const isEqual = (unlockLevel: number, controllerLevel: number): boolean => controllerLevel === unlockLevel
+                const isEqual = (unlockLevel: number, controllerLevel: number): boolean =>
+                    controllerLevel === unlockLevel
                 // Get the new creeps if any are unlocked at this level
                 const newCreeps = this.garrison.generateSpawnQueue(this.census, curRCL, isEqual)
                 // Add them to the end of the queue
@@ -115,7 +116,10 @@ export default class Base {
     public main(): void {
         // Make sure the Base has a spawn queue
         const isGtOrEqual = (unlockLevel: number, controllerLevel: number): boolean => controllerLevel >= unlockLevel
-        this.spawnQueue = this.spawnQueue.length > 0 ? this.spawnQueue : this.garrison.generateSpawnQueue(this.census, this.controllerLevel, isGtOrEqual)
+        this.spawnQueue =
+            this.spawnQueue.length > 0
+                ? this.spawnQueue
+                : this.garrison.generateSpawnQueue(this.census, this.controllerLevel, isGtOrEqual)
         this.controllerLevel = this.updateRCL(this.room)
 
         // Recruit new creep and add to census
