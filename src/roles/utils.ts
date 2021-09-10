@@ -1,8 +1,8 @@
 // Harvest energy
 export const harvest = (creep: Creep): void => {
-    const sources = creep.room.find(FIND_SOURCES)
-    if (creep.harvest(sources[0]) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(sources[0], {
+    const source = creep.room.find(FIND_SOURCES)[0]
+    if (creep.harvest(source) === ERR_NOT_IN_RANGE) {
+        creep.moveTo(source, {
             visualizePathStyle: { stroke: '#ffaa00' }
         })
     }
