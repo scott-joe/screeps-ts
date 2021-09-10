@@ -2,6 +2,20 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
+Creep.prototype.energyFull = function () {
+    return this.store[RESOURCE_ENERGY] === this.store.getCapacity(RESOURCE_ENERGY);
+};
+Creep.prototype.renew = function () {
+    const spawn = this.pos.findClosestByPath(FIND_MY_SPAWNS, {
+        filter: (item) => item.store.getUsedCapacity(RESOURCE_ENERGY) > 100
+    });
+    if (spawn.renewCreep(this) === ERR_NOT_IN_RANGE) {
+        this.moveTo(spawn, {
+            visualizePathStyle: { stroke: '#ffaa00' }
+        });
+    }
+};
+
 var sourceMapGenerator = {};
 
 var base64Vlq = {};
@@ -3263,9 +3277,9 @@ const creepTemplates = {
 
 // Harvest energy
 const harvest = (creep) => {
-    const sources = creep.room.find(FIND_SOURCES);
-    if (creep.harvest(sources[0]) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(sources[0], {
+    const source = creep.room.find(FIND_SOURCES)[0];
+    if (creep.harvest(source) === ERR_NOT_IN_RANGE) {
+        creep.moveTo(source, {
             visualizePathStyle: { stroke: '#ffaa00' }
         });
     }
@@ -3341,11 +3355,16 @@ var builder = {
 
 // TODO: FIND BASED ON DIVISION[MILITARY|CIVILIAN]
 // TODO: PRIORITIZE CONSTRUCTION
-const transferTargetList = [STRUCTURE_SPAWN, STRUCTURE_EXTENSION, STRUCTURE_CONTAINER, STRUCTURE_STORAGE];
+const transferTargetList = [
+    STRUCTURE_SPAWN,
+    STRUCTURE_EXTENSION,
+    STRUCTURE_CONTAINER,
+    STRUCTURE_STORAGE
+];
 const transferTargetFilter = (item) => {
-    return (transferTargetList.includes(item.structureType)
+    return (transferTargetList.includes(item.structureType) &&
         // @ts-ignore
-        && (item.store.getFreeCapacity(RESOURCE_ENERGY) > 0));
+        item.store.getFreeCapacity(RESOURCE_ENERGY) > 0);
 };
 var harvester = {
     run(creep) {
@@ -3355,7 +3374,7 @@ var harvester = {
             creep.renew();
             // If we're out of energy, go get more
         }
-        else if (creep.store[RESOURCE_ENERGY] === 0) {
+        else if (!creep.energyFull()) {
             harvest(creep);
             // If we're full on energy, use it
         }
@@ -3591,7 +3610,10 @@ class Base {
     main() {
         // Make sure the Base has a spawn queue
         const isGtOrEqual = (unlockLevel, controllerLevel) => controllerLevel >= unlockLevel;
-        this.spawnQueue = this.spawnQueue.length > 0 ? this.spawnQueue : this.garrison.generateSpawnQueue(this.census, this.controllerLevel, isGtOrEqual);
+        this.spawnQueue =
+            this.spawnQueue.length > 0
+                ? this.spawnQueue
+                : this.garrison.generateSpawnQueue(this.census, this.controllerLevel, isGtOrEqual);
         this.controllerLevel = this.updateRCL(this.room);
         // Recruit new creep and add to census
         for (const id in this.spawns) {

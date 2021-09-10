@@ -1,3 +1,4 @@
+import 'extensions/Creep' // Extend the Screeps API
 import { ErrorMapper } from 'utils/ErrorMapper'
 import Base from 'controllers/Base'
 
