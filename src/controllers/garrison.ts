@@ -50,7 +50,7 @@ export class Garrison {
         const name: string = `${role}-${Game.time}`
         const template: BodyPartConstant[] = creepTemplates[role]
         const body = this.generateCreepRecipe(template, this.spawn.room.energyAvailable)
-        console.log(`🟢 Attempting to Spawn ${role}`, name, body)
+        // console.log(`🟢 Attempting to Spawn ${role}`, name, body)
 
         const result = this.spawn.spawnCreep(body, name, {
             memory: { role }
@@ -62,7 +62,7 @@ export class Garrison {
     public generateSpawnQueue(census: Census, controllerLevel: number, condition: Function): CreepRole[] {
         const output: CreepRole[] = []
 
-        console.log(`🟢 Generating Spawn Queue for ${this.spawn.room.name}`)
+        // console.log(`🟢 Generating Spawn Queue for ${this.spawn.room.name}`)
 
         for (const roleId in census) {
             // Get the config for that role
@@ -92,7 +92,7 @@ export class Garrison {
     public recruit(role: CreepRole, census: Census, spawnQueue: CreepRole[]): boolean {
         // Do we have enough resources and room?
         if (this.shouldSpawn(role, census)) {
-            console.log(`🟢 Should recruit ${role}`)
+            // console.log(`🟢 Should recruit ${role}`)
             // Spawn a creep
             const result = this.spawnCreep(role)
 
