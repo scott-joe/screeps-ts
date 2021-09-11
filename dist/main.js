@@ -3321,6 +3321,32 @@ const build = (creep, constructionSite) => {
 // export const findDamagedStructures = (creep:Creep): Array<Structure> => {
 // }
 
+const findStructures = (creep) => {
+    return creep.room.find(FIND_STRUCTURES, {
+        filter: structure => {
+            return ((structure.structureType === STRUCTURE_EXTENSION ||
+                structure.structureType === STRUCTURE_SPAWN ||
+                structure.structureType === STRUCTURE_TOWER) &&
+                structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0);
+        }
+    });
+};
+const harvest = (creep) => {
+    const sources = creep.room.find(FIND_SOURCES);
+    if (creep.harvest(sources[0]) === ERR_NOT_IN_RANGE) {
+        creep.moveTo(sources[0], {
+            visualizePathStyle: { stroke: '#ffaa00' }
+        });
+    }
+};
+const build = (creep, sites) => {
+    if (creep.build(sites[0]) === ERR_NOT_IN_RANGE) {
+        creep.moveTo(sites[0], {
+            visualizePathStyle: { stroke: '#ffffff' }
+        });
+    }
+};
+
 var CreepRole;
 (function (CreepRole) {
     CreepRole["HARVESTER"] = "HARVESTER";

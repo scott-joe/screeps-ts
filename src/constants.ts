@@ -1,5 +1,6 @@
 import { Census, CreepTemplateList, MaintenanceTargetList, RecipeSort } from 'types/main'
 
+export const logLvl: string = 'ALL'
 export const minTTL = 500
 export const downgradeThreshold = 5000
 // export const recipeStyle = RecipeSort.STRIPED

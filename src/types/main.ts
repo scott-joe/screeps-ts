@@ -26,7 +26,8 @@ export enum CreepActions {
     SHOOT = 'SHOOT',
     HEAL = 'HEAL',
     SCOUT = 'SCOUT',
-    RUN = 'RUN'
+    RUN = 'RUN',
+    IDLE = 'IDLE'
 }
 
 export interface Census {
