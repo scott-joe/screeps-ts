@@ -21,10 +21,10 @@ const transferTargetFilter = (structure: Structure): boolean => {
 //  test to see if they're not full to see if they should gather more.
 export default {
     run(creep: Creep) {
+        const downgradeImminent = creep.room.controller?.ticksToDowngrade! <= downgradeThreshold
         const transferTarget: TransferTarget = creep.room.find(FIND_STRUCTURES, {
             filter: transferTargetFilter
         })[0] as TransferTarget
-        const downgradeImminent = creep.room.controller?.ticksToDowngrade! <= downgradeThreshold
         const controller = creep.room?.controller!
         let action = creep.memory.action || HARVEST
 
@@ -45,8 +45,6 @@ export default {
             // If you're done harvesting,
             // go build
             action = TRANSFER
-        } else {
-            action = HARVEST
         }
 
         // Implement the above decided action

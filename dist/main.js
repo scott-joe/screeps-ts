@@ -148,14 +148,15 @@ const transferTargetList = [
     STRUCTURE_STORAGE
 ];
 const transferTargetFilter = (structure) => {
-    return (transferTargetList.includes(structure.structureType)
-    );
+    return transferTargetList.includes(structure.structureType);
 };
 var harvester = {
     run(creep) {
         var _a, _b;
-        const transferTarget = creep.room.find(FIND_STRUCTURES, { filter: transferTargetFilter })[0];
         const downgradeImminent = ((_a = creep.room.controller) === null || _a === void 0 ? void 0 : _a.ticksToDowngrade) <= downgradeThreshold;
+        const transferTarget = creep.room.find(FIND_STRUCTURES, {
+            filter: transferTargetFilter
+        })[0];
         const controller = (_b = creep.room) === null || _b === void 0 ? void 0 : _b.controller;
         let action = creep.memory.action || HARVEST;
         if (creep.ticksToLive <= minTTL) {
@@ -169,9 +170,6 @@ var harvester = {
         }
         else if (action === HARVEST && creep.energyFull()) {
             action = TRANSFER;
-        }
-        else {
-            action = HARVEST;
         }
         if (action === RENEW) {
             creep.renew();
