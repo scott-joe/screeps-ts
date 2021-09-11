@@ -35,7 +35,7 @@ export default {
         }
 
         // Implement the above decided action
-        if (action === RENEW){
+        if (action === RENEW) {
             creep.renew()
         } else if (action === UPGRADE) {
             upgrade(creep, controller)

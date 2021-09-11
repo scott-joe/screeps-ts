@@ -1,5 +1,5 @@
 import { downgradeThreshold, minTTL } from '../constants'
-import { harvest, transfer , upgrade } from 'roles/utils'
+import { harvest, transfer, upgrade } from 'roles/utils'
 import { CreepActions } from 'types/main'
 
 // TODO: FIND BASED ON DIVISION[MILITARY|CIVILIAN]
@@ -13,17 +13,17 @@ const transferTargetList: StructureConstant[] = [
     STRUCTURE_STORAGE
 ]
 const transferTargetFilter = (structure: Structure): boolean => {
-    return (
-        transferTargetList.includes(structure.structureType)
-        // && (structure.store && structure?.store?.getFreeCapacity(RESOURCE_ENERGY) > 0)
-    )
+    return transferTargetList.includes(structure.structureType)
+    // && (structure.store && structure?.store?.getFreeCapacity(RESOURCE_ENERGY) > 0)
 }
 
 // The Transfer method is instant and complete, so we only have to
 //  test to see if they're not full to see if they should gather more.
 export default {
     run(creep: Creep) {
-        const transferTarget: TransferTarget = creep.room.find(FIND_STRUCTURES, { filter: transferTargetFilter })[0] as TransferTarget
+        const transferTarget: TransferTarget = creep.room.find(FIND_STRUCTURES, {
+            filter: transferTargetFilter
+        })[0] as TransferTarget
         const downgradeImminent = creep.room.controller?.ticksToDowngrade! <= downgradeThreshold
         const controller = creep.room?.controller!
         let action = creep.memory.action || HARVEST
@@ -50,7 +50,7 @@ export default {
         }
 
         // Implement the above decided action
-        if (action === RENEW){
+        if (action === RENEW) {
             creep.renew()
         } else if (action === UPGRADE) {
             upgrade(creep, controller)

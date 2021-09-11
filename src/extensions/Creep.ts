@@ -1,4 +1,4 @@
-import { CreepActions } from "types/main"
+import { CreepActions } from 'types/main'
 
 Creep.prototype.energyFull = function () {
     return this.store[RESOURCE_ENERGY] === this.store.getCapacity(RESOURCE_ENERGY)
