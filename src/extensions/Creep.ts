@@ -1,4 +1,4 @@
-import { CreepActions } from 'types/main'
+import { minTTL } from '../constants'
 
 Creep.prototype.energyFull = function () {
     return this.store[RESOURCE_ENERGY] === this.store.getCapacity(RESOURCE_ENERGY)
@@ -6,6 +6,10 @@ Creep.prototype.energyFull = function () {
 
 Creep.prototype.energyEmpty = function () {
     return this.store[RESOURCE_ENERGY] === 0
+}
+
+Creep.prototype.needsRenew = function () {
+    return this.ticksToLive! <= minTTL
 }
 
 Creep.prototype.renew = function () {

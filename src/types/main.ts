@@ -86,6 +86,7 @@ declare global {
         energyFull: Function
         energyEmpty: Function
         renew: Function
+        needsRenew: Function
     }
 
     interface RoomMemory {

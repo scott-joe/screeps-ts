@@ -1,19 +1,4 @@
-'use strict';Object.defineProperty(exports,'__esModule',{value:true});Creep.prototype.energyFull = function () {
-    return this.store[RESOURCE_ENERGY] === this.store.getCapacity(RESOURCE_ENERGY);
-};
-Creep.prototype.energyEmpty = function () {
-    return this.store[RESOURCE_ENERGY] === 0;
-};
-Creep.prototype.renew = function () {
-    const spawn = this.pos.findClosestByPath(FIND_MY_SPAWNS, {
-        filter: (item) => item.store.getUsedCapacity(RESOURCE_ENERGY) > 100
-    });
-    if (spawn.renewCreep(this) === ERR_NOT_IN_RANGE) {
-        this.moveTo(spawn, {
-            visualizePathStyle: { stroke: '#ffaa00' }
-        });
-    }
-};const minTTL = 500;
+'use strict';Object.defineProperty(exports,'__esModule',{value:true});const minTTL = 500;
 const downgradeThreshold = 5000;
 const censusDefaults = {
     HARVESTER: { min: 2, cur: 0, unlock: 1 },
@@ -32,6 +17,24 @@ const creepTemplates = {
     RANGER: [TOUGH, RANGED_ATTACK, MOVE],
     MEDIC: [HEAL, MOVE],
     SCOUT: [CLAIM, MOVE]
+};Creep.prototype.energyFull = function () {
+    return this.store[RESOURCE_ENERGY] === this.store.getCapacity(RESOURCE_ENERGY);
+};
+Creep.prototype.energyEmpty = function () {
+    return this.store[RESOURCE_ENERGY] === 0;
+};
+Creep.prototype.needsRenew = function () {
+    return this.ticksToLive <= minTTL;
+};
+Creep.prototype.renew = function () {
+    const spawn = this.pos.findClosestByPath(FIND_MY_SPAWNS, {
+        filter: (item) => item.store.getUsedCapacity(RESOURCE_ENERGY) > 100
+    });
+    if (spawn.renewCreep(this) === ERR_NOT_IN_RANGE) {
+        this.moveTo(spawn, {
+            visualizePathStyle: { stroke: '#ffaa00' }
+        });
+    }
 };const harvest = (creep) => {
     const source = creep.room.find(FIND_SOURCES)[0];
     if (creep.harvest(source) === ERR_NOT_IN_RANGE) {
@@ -159,8 +162,11 @@ var harvester = {
         })[0];
         const controller = (_b = creep.room) === null || _b === void 0 ? void 0 : _b.controller;
         let action = creep.memory.action || HARVEST;
-        if (creep.ticksToLive <= minTTL) {
+        if (creep.needsRenew()) {
             action = RENEW;
+        }
+        else if (action === RENEW && !creep.needsRenew()) {
+            action = HARVEST;
         }
         else if (action !== HARVEST && creep.energyEmpty()) {
             action = HARVEST;

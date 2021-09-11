@@ -29,10 +29,14 @@ export default {
         let action = creep.memory.action || HARVEST
 
         // Triggers to start doing something else
-        if (creep.ticksToLive! <= minTTL) {
+        if (creep.needsRenew()) {
             // If you're about to age out,
             // go get renewed at the neatest Spawn
             action = RENEW
+        } else if (action === RENEW && !creep.needsRenew()) {
+            // If it was renewing, but no longer needs it...
+            // reset to default of HARVEST
+            action = HARVEST
         } else if (action !== HARVEST && creep.energyEmpty()) {
             // If doing anything other than harvesting, and energy is empty,
             // go harvest
