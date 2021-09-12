@@ -1,11 +1,11 @@
-import { downgradeThreshold, minTTL } from '../constants'
+import { downgradeThreshold } from '../constants'
 import { harvest, transfer, upgrade } from 'roles/utils'
 import { CreepActions } from 'types/main'
 
 // TODO: FIND BASED ON DIVISION[MILITARY|CIVILIAN]
 // TODO: PRIORITIZE CONSTRUCTION
 type TransferTarget = StructureSpawn | StructureExtension | StructureContainer | StructureStorage
-const { TRANSFER, HARVEST, UPGRADE, RENEW } = CreepActions
+const { TRANSFER, HARVEST, UPGRADE } = CreepActions
 const transferTargetList: StructureConstant[] = [
     STRUCTURE_SPAWN,
     STRUCTURE_EXTENSION,
@@ -15,6 +15,10 @@ const transferTargetList: StructureConstant[] = [
 const transferTargetFilter = (structure: Structure): boolean => {
     return transferTargetList.includes(structure.structureType)
     // && (structure.store && structure?.store?.getFreeCapacity(RESOURCE_ENERGY) > 0)
+}
+
+const storageFull = (transferTarget: TransferTarget): boolean => {
+    return transferTarget.store.getFreeCapacity() === 0
 }
 
 // The Transfer method is instant and complete, so we only have to
@@ -28,16 +32,7 @@ export default {
         const controller = creep.room?.controller!
         let action = creep.memory.action || HARVEST
 
-        // Triggers to start doing something else
-        if (creep.needsRenew()) {
-            // If you're about to age out,
-            // go get renewed at the neatest Spawn
-            action = RENEW
-        } else if (action === RENEW && !creep.needsRenew()) {
-            // If it was renewing, but no longer needs it...
-            // reset to default of HARVEST
-            action = HARVEST
-        } else if (action !== HARVEST && creep.energyEmpty()) {
+        if (action !== HARVEST && creep.energyEmpty()) {
             // If doing anything other than harvesting, and energy is empty,
             // go harvest
             action = HARVEST
@@ -49,19 +44,19 @@ export default {
             // If you're done harvesting,
             // go build
             action = TRANSFER
+        } else if (action === TRANSFER && storageFull(transferTarget)) {
+            // If you're ready to transfer but they're all full...
+            // use it to upgrade the Controller
+            action = UPGRADE
         }
 
         // Implement the above decided action
-        if (action === RENEW) {
-            creep.renew()
-        } else if (action === UPGRADE) {
+        if (action === UPGRADE) {
             upgrade(creep, controller)
         } else if (action === TRANSFER && transferTarget) {
             transfer(creep, transferTarget)
         } else if (action === HARVEST) {
             harvest(creep)
-        } else {
-            upgrade(creep, controller)
         }
 
         // Save the changed action into Memory

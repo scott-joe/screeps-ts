@@ -98,6 +98,7 @@ declare global {
     interface Room {
         base: Function
         size: number
+        spawnThatCanRenew: Function
     }
 
     // Syntax for adding proprties to `global` (ex "global.log")

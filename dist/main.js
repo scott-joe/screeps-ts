@@ -24,12 +24,10 @@ Creep.prototype.energyEmpty = function () {
     return this.store[RESOURCE_ENERGY] === 0;
 };
 Creep.prototype.needsRenew = function () {
-    return this.ticksToLive <= minTTL;
+    return (
+    this.ticksToLive <= minTTL);
 };
-Creep.prototype.renew = function () {
-    const spawn = this.pos.findClosestByPath(FIND_MY_SPAWNS, {
-        filter: (item) => item.store.getUsedCapacity(RESOURCE_ENERGY) > 100
-    });
+Creep.prototype.renew = function (spawn) {
     if (spawn.renewCreep(this) === ERR_NOT_IN_RANGE) {
         this.moveTo(spawn, {
             visualizePathStyle: { stroke: '#ffaa00' }
@@ -106,7 +104,7 @@ var RecipeSort;
 (function (RecipeSort) {
     RecipeSort["STRIPED"] = "STRIPED";
     RecipeSort["FLAT"] = "FLAT";
-})(RecipeSort || (RecipeSort = {}));const { BUILD, HARVEST: HARVEST$1, UPGRADE: UPGRADE$1, RENEW: RENEW$1 } = CreepActions;
+})(RecipeSort || (RecipeSort = {}));const { BUILD, HARVEST: HARVEST$1, UPGRADE: UPGRADE$1, RENEW } = CreepActions;
 var builder = {
     run(creep) {
         var _a, _b;
@@ -115,7 +113,7 @@ var builder = {
         const controller = (_b = creep.room) === null || _b === void 0 ? void 0 : _b.controller;
         let action = creep.memory.action || HARVEST$1;
         if (creep.ticksToLive <= minTTL) {
-            action = RENEW$1;
+            action = RENEW;
         }
         else if (action !== HARVEST$1 && creep.energyEmpty()) {
             action = HARVEST$1;
@@ -126,7 +124,7 @@ var builder = {
         else if (action === HARVEST$1 && creep.energyFull()) {
             action = BUILD;
         }
-        if (action === RENEW$1) {
+        if (action === RENEW) {
             creep.renew();
         }
         else if (action === UPGRADE$1) {
@@ -143,7 +141,7 @@ var builder = {
         }
         creep.memory.action = action;
     }
-};const { TRANSFER, HARVEST, UPGRADE, RENEW } = CreepActions;
+};const { TRANSFER, HARVEST, UPGRADE } = CreepActions;
 const transferTargetList = [
     STRUCTURE_SPAWN,
     STRUCTURE_EXTENSION,
@@ -152,6 +150,9 @@ const transferTargetList = [
 ];
 const transferTargetFilter = (structure) => {
     return transferTargetList.includes(structure.structureType);
+};
+const storageFull = (transferTarget) => {
+    return transferTarget.store.getFreeCapacity() === 0;
 };
 var harvester = {
     run(creep) {
@@ -162,13 +163,7 @@ var harvester = {
         })[0];
         const controller = (_b = creep.room) === null || _b === void 0 ? void 0 : _b.controller;
         let action = creep.memory.action || HARVEST;
-        if (creep.needsRenew()) {
-            action = RENEW;
-        }
-        else if (action === RENEW && !creep.needsRenew()) {
-            action = HARVEST;
-        }
-        else if (action !== HARVEST && creep.energyEmpty()) {
+        if (action !== HARVEST && creep.energyEmpty()) {
             action = HARVEST;
         }
         else if (downgradeImminent && !creep.energyEmpty()) {
@@ -177,10 +172,10 @@ var harvester = {
         else if (action === HARVEST && creep.energyFull()) {
             action = TRANSFER;
         }
-        if (action === RENEW) {
-            creep.renew();
+        else if (action === TRANSFER && storageFull(transferTarget)) {
+            action = UPGRADE;
         }
-        else if (action === UPGRADE) {
+        if (action === UPGRADE) {
             upgrade(creep, controller);
         }
         else if (action === TRANSFER && transferTarget) {
@@ -188,9 +183,6 @@ var harvester = {
         }
         else if (action === HARVEST) {
             harvest(creep);
-        }
-        else {
-            upgrade(creep, controller);
         }
         creep.memory.action = action;
     }

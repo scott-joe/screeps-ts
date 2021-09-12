@@ -9,14 +9,13 @@ Creep.prototype.energyEmpty = function () {
 }
 
 Creep.prototype.needsRenew = function () {
-    return this.ticksToLive! <= minTTL
+    return (
+        // DOESN'T CONTAIN CLAIM BODY PART
+        this.ticksToLive! <= minTTL
+    )
 }
 
-Creep.prototype.renew = function () {
-    const spawn: StructureSpawn = this.pos.findClosestByPath(FIND_MY_SPAWNS, {
-        filter: (item: StructureSpawn) => item.store.getUsedCapacity(RESOURCE_ENERGY) > 100
-    })!
-
+Creep.prototype.renew = function (spawn: StructureSpawn) {
     if (spawn.renewCreep(this) === ERR_NOT_IN_RANGE) {
         this.moveTo(spawn, {
             visualizePathStyle: { stroke: '#ffaa00' }
