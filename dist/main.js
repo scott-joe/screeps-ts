@@ -112,10 +112,7 @@ var builder = {
         const downgradeImminent = ((_a = creep.room.controller) === null || _a === void 0 ? void 0 : _a.ticksToDowngrade) <= downgradeThreshold;
         const controller = (_b = creep.room) === null || _b === void 0 ? void 0 : _b.controller;
         let action = creep.memory.action || HARVEST$1;
-        if (creep.ticksToLive <= minTTL) {
-            action = RENEW;
-        }
-        else if (action !== HARVEST$1 && creep.energyEmpty()) {
+        if (action !== HARVEST$1 && creep.energyEmpty()) {
             action = HARVEST$1;
         }
         else if (downgradeImminent && !creep.energyEmpty()) {
@@ -124,10 +121,7 @@ var builder = {
         else if (action === HARVEST$1 && creep.energyFull()) {
             action = BUILD;
         }
-        if (action === RENEW) {
-            creep.renew();
-        }
-        else if (action === UPGRADE$1) {
+        if (action === UPGRADE$1) {
             upgrade(creep, controller);
         }
         else if (action === BUILD && constructionSite) {
