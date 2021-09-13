@@ -136,25 +136,24 @@ var builder = {
         creep.memory.action = action;
     }
 };const { TRANSFER, HARVEST, UPGRADE } = CreepActions;
-const transferTargetList = [
-    STRUCTURE_SPAWN,
-    STRUCTURE_EXTENSION,
-    STRUCTURE_CONTAINER,
-    STRUCTURE_STORAGE
-];
-const transferTargetFilter = (structure) => {
-    return transferTargetList.includes(structure.structureType);
-};
-const storageFull = (transferTarget) => {
-    return transferTarget.store.getFreeCapacity() === 0;
+const getValidTransferTarget = (creep) => {
+    const storageStructureTypeConsts = [
+        STRUCTURE_SPAWN,
+        STRUCTURE_EXTENSION,
+        STRUCTURE_CONTAINER,
+        STRUCTURE_STORAGE
+    ];
+    const list = creep.room.find(FIND_STRUCTURES, {
+        filter: (structure) => storageStructureTypeConsts.includes(structure.structureType)
+    });
+    const transferTarget = list.find(item => item.store.getFreeCapacity(RESOURCE_ENERGY) > 0);
+    return !!transferTarget ? transferTarget : null;
 };
 var harvester = {
     run(creep) {
         var _a, _b;
         const downgradeImminent = ((_a = creep.room.controller) === null || _a === void 0 ? void 0 : _a.ticksToDowngrade) <= downgradeThreshold;
-        const transferTarget = creep.room.find(FIND_STRUCTURES, {
-            filter: transferTargetFilter
-        })[0];
+        const transferTarget = getValidTransferTarget(creep);
         const controller = (_b = creep.room) === null || _b === void 0 ? void 0 : _b.controller;
         let action = creep.memory.action || HARVEST;
         if (action !== HARVEST && creep.energyEmpty()) {
@@ -164,19 +163,27 @@ var harvester = {
             action = UPGRADE;
         }
         else if (action === HARVEST && creep.energyFull()) {
-            action = TRANSFER;
+            if (!!transferTarget) {
+                action = TRANSFER;
+            }
+            else {
+                action = UPGRADE;
+            }
         }
-        else if (action === TRANSFER && storageFull(transferTarget)) {
+        else if (action === TRANSFER && !!!transferTarget) {
             action = UPGRADE;
         }
         if (action === UPGRADE) {
             upgrade(creep, controller);
         }
-        else if (action === TRANSFER && transferTarget) {
+        else if (action === TRANSFER) {
             transfer(creep, transferTarget);
         }
         else if (action === HARVEST) {
             harvest(creep);
+        }
+        else {
+            upgrade(creep, controller);
         }
         creep.memory.action = action;
     }

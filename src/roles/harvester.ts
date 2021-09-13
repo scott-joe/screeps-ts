@@ -4,21 +4,26 @@ import { CreepActions } from 'types/main'
 
 // TODO: FIND BASED ON DIVISION[MILITARY|CIVILIAN]
 // TODO: PRIORITIZE CONSTRUCTION
-type TransferTarget = StructureSpawn | StructureExtension | StructureContainer | StructureStorage
 const { TRANSFER, HARVEST, UPGRADE } = CreepActions
-const transferTargetList: StructureConstant[] = [
-    STRUCTURE_SPAWN,
-    STRUCTURE_EXTENSION,
-    STRUCTURE_CONTAINER,
-    STRUCTURE_STORAGE
-]
-const transferTargetFilter = (structure: Structure): boolean => {
-    return transferTargetList.includes(structure.structureType)
-    // && (structure.store && structure?.store?.getFreeCapacity(RESOURCE_ENERGY) > 0)
-}
+type storageStructureType = StructureSpawn | StructureExtension | StructureContainer | StructureStorage
 
-const storageFull = (transferTarget: TransferTarget): boolean => {
-    return transferTarget.store.getFreeCapacity() === 0
+const getValidTransferTarget = (creep: Creep): storageStructureType | null => {
+    const storageStructureTypeConsts: StructureConstant[] = [
+        STRUCTURE_SPAWN,
+        STRUCTURE_EXTENSION,
+        STRUCTURE_CONTAINER,
+        STRUCTURE_STORAGE
+    ]
+    // Filter down to just the few structure types we're looking for
+    //  Bc not all structures have a .store prop, this is a 2 step filter
+    const list: storageStructureType[] = creep.room.find(FIND_STRUCTURES, {
+        filter: (structure: Structure): boolean => storageStructureTypeConsts.includes(structure.structureType)
+    })
+    // Filter down to just those with some open capacity
+    // let transferTargets: storageStructureType[] = list.filter((item: storageStructureType) => item.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
+    const transferTarget: storageStructureType | undefined = list.find(item => item.store.getFreeCapacity(RESOURCE_ENERGY)! > 0)
+    // Send the 1st result or
+    return !!transferTarget ? transferTarget : null
 }
 
 // The Transfer method is instant and complete, so we only have to
@@ -26,10 +31,11 @@ const storageFull = (transferTarget: TransferTarget): boolean => {
 export default {
     run(creep: Creep) {
         const downgradeImminent = creep.room.controller?.ticksToDowngrade! <= downgradeThreshold
-        const transferTarget: TransferTarget = creep.room.find(FIND_STRUCTURES, {
-            filter: transferTargetFilter
-        })[0] as TransferTarget
+        // Get a transfer target or false if there are none
+        const transferTarget = getValidTransferTarget(creep)
+        // Handler for the controller
         const controller = creep.room?.controller!
+        // Pull the creep's action or default to HARVEST
         let action = creep.memory.action || HARVEST
 
         if (action !== HARVEST && creep.energyEmpty()) {
@@ -42,9 +48,15 @@ export default {
             action = UPGRADE
         } else if (action === HARVEST && creep.energyFull()) {
             // If you're done harvesting,
-            // go build
-            action = TRANSFER
-        } else if (action === TRANSFER && storageFull(transferTarget)) {
+            // go transfer it to a structure
+            if (!!transferTarget) {
+                // If you have a structure...
+                action = TRANSFER
+            } else {
+                // Otherwise, upgrade
+                action = UPGRADE
+            }
+        } else if (action === TRANSFER && !!!transferTarget) {
             // If you're ready to transfer but they're all full...
             // use it to upgrade the Controller
             action = UPGRADE
@@ -53,10 +65,12 @@ export default {
         // Implement the above decided action
         if (action === UPGRADE) {
             upgrade(creep, controller)
-        } else if (action === TRANSFER && transferTarget) {
-            transfer(creep, transferTarget)
+        } else if (action === TRANSFER) {
+            transfer(creep, transferTarget!)
         } else if (action === HARVEST) {
             harvest(creep)
+        } else {
+            upgrade(creep, controller)
         }
 
         // Save the changed action into Memory
