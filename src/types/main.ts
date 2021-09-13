@@ -1,5 +1,5 @@
 export type CensusStatus = {
-    min: number
+    max: number
     cur: number
     unlock: number
 }

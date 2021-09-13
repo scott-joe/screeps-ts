@@ -63,7 +63,6 @@ export class Garrison {
         const output: CreepRole[] = []
 
         // console.log(`🟢 Generating Spawn Queue for ${this.spawn.room.name}`)
-
         for (const roleId in census) {
             // Get the config for that role
             const cfg = census[roleId]
@@ -71,7 +70,7 @@ export class Garrison {
             const role = roleId as CreepRole
             // If our the creep should spawn yet
             if (condition(cfg.unlock, controllerLevel)) {
-                for (let i = 1; i <= cfg.min; i++) {
+                for (let i = 1; i <= cfg.max; i++) {
                     output.push(role)
                 }
             }
@@ -82,7 +81,7 @@ export class Garrison {
 
     private shouldSpawn(role: CreepRole, census: Census): boolean {
         // Do we have room for another creep of this role?
-        const haveRoom = census[role].cur < census[role].min
+        const haveRoom = census[role].cur < census[role].max
         // Are we at max energy? So they're the biggest and best they can be?
         const atFullEnergy = this.energyAvailable === this.energyCapacity
 
@@ -90,24 +89,10 @@ export class Garrison {
     }
 
     public recruit(role: CreepRole, census: Census, spawnQueue: CreepRole[]): boolean {
-        // Do we have enough resources and room?
         if (this.shouldSpawn(role, census)) {
             // console.log(`🟢 Should recruit ${role}`)
             // Spawn a creep
-            const result = this.spawnCreep(role)
-
-            // Did it succeed?
-            if (result) {
-                console.log(`🟢 Successfully spawned ${role}`)
-                // Remove the creep's role from the queue
-                spawnQueue.shift()
-                // Add the role to the census
-                census[role].cur += 1
-            } else {
-                console.log(`🔴 Spawning error ${result} for ${role}`)
-            }
-
-            return result
+            return this.spawnCreep(role)
         } else {
             // Don't spawn now
             // console.log(`🔴 Shouldn't Recruit ${role}`)

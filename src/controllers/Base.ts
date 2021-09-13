@@ -1,5 +1,5 @@
 import { censusDefaults } from '../constants'
-import { harvester, builder } from 'roles'
+import { harvester, builder, mechanic } from 'roles'
 import { Census, CreepRole } from 'types/main'
 import { Garrison } from './Garrison'
 
@@ -19,7 +19,7 @@ export default class Base {
         this.room = room
         this.spawns = this.room.find(FIND_MY_SPAWNS) // <= 3
         this.memory = this.room.memory
-        this.spawnQueue = this.memory.spawnQueue || []
+        this.spawnQueue = this.memory.spawnQueue || undefined
         this.controllerLevel = this.memory.controllerLevel || room.controller?.level!
         this.garrison = new Garrison(this.spawns[0])
         this.census = this.memory.census || censusDefaults
@@ -39,9 +39,9 @@ export default class Base {
                     case CreepRole.BUILDER:
                         builder.run(creep)
                         break
-                    // case CreepRole.MECHANIC:
-                    //     mechanic.run(creep)
-                    //     break
+                    case CreepRole.MECHANIC:
+                        mechanic.run(creep)
+                        break
                     // case CreepRole.GRUNT:
                     //     grunt.run(creep)
                     //     break
@@ -105,7 +105,7 @@ export default class Base {
                 // Get the new creeps if any are unlocked at this level
                 const newCreeps = this.garrison.generateSpawnQueue(this.census, curRCL, isEqual)
                 // Add them to the end of the queue
-                this.spawnQueue.concat(newCreeps)
+                this.spawnQueue = [...this.spawnQueue, ...newCreeps]
             }
         }
 
@@ -116,10 +116,7 @@ export default class Base {
     public main(): void {
         // Make sure the Base has a spawn queue
         const isGtOrEqual = (unlockLevel: number, controllerLevel: number): boolean => controllerLevel >= unlockLevel
-        this.spawnQueue =
-            this.spawnQueue.length > 0
-                ? this.spawnQueue
-                : this.garrison.generateSpawnQueue(this.census, this.controllerLevel, isGtOrEqual)
+        if (this.spawnQueue === undefined) this.spawnQueue = this.garrison.generateSpawnQueue(this.census, this.controllerLevel, isGtOrEqual)
         this.controllerLevel = this.updateRCL(this.room)
 
         // Recruit new creep and add to census
@@ -128,9 +125,17 @@ export default class Base {
 
             // Is the Spawn busy?
             if (!this.isSpawning(spawn)) {
-                const nextCreep: CreepRole = this.spawnQueue[0]
-                if (nextCreep) {
-                    this.garrison.recruit(nextCreep, this.census, this.spawnQueue)
+                const role: CreepRole = this.spawnQueue[0]
+                if (role) {
+                    const result = this.garrison.recruit(role, this.census, this.spawnQueue)
+                    // Did it succeed?
+                    if (result) {
+                        console.log(`🟢 Successfully spawned ${role}`)
+                        // Remove the creep's role from the queue
+                        this.spawnQueue.shift()
+                        // Add the role to the census
+                        this.census[role].cur += 1
+                    }
                 }
             }
         }

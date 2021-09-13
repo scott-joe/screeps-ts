@@ -6,13 +6,13 @@ export const downgradeThreshold = 5000
 // export const recipeStyle = RecipeSort.STRIPED
 
 export const censusDefaults: Census = {
-    HARVESTER: { min: 2, cur: 0, unlock: 1 },
-    BUILDER: { min: 4, cur: 0, unlock: 1 },
-    MECHANIC: { min: 1, cur: 0, unlock: 2 },
-    GRUNT: { min: 2, cur: 0, unlock: 3 },
-    RANGER: { min: 2, cur: 0, unlock: 3 },
-    MEDIC: { min: 1, cur: 0, unlock: 3 },
-    SCOUT: { min: 1, cur: 0, unlock: 4 }
+    HARVESTER: { max: 2, cur: 0, unlock: 1 },
+    BUILDER: { max: 4, cur: 0, unlock: 1 },
+    MECHANIC: { max: 1, cur: 0, unlock: 2 },
+    GRUNT: { max: 2, cur: 0, unlock: 3 },
+    RANGER: { max: 2, cur: 0, unlock: 3 },
+    MEDIC: { max: 1, cur: 0, unlock: 3 },
+    SCOUT: { max: 1, cur: 0, unlock: 4 }
 }
 
 export const creepTemplates: CreepTemplateList = {

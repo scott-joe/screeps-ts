@@ -22,7 +22,7 @@ const getValidTransferTarget = (creep: Creep): storageStructureType | null => {
     // Filter down to just those with some open capacity
     // let transferTargets: storageStructureType[] = list.filter((item: storageStructureType) => item.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
     const transferTarget: storageStructureType | undefined = list.find(item => item.store.getFreeCapacity(RESOURCE_ENERGY)! > 0)
-    // Send the 1st result or
+    // Send the 1st result or null
     return !!transferTarget ? transferTarget : null
 }
 
@@ -53,7 +53,7 @@ export default {
                 // If you have a structure...
                 action = TRANSFER
             } else {
-                // Otherwise, upgrade
+                // Otherwise, upgrade the Controller
                 action = UPGRADE
             }
         } else if (action === TRANSFER && !!!transferTarget) {

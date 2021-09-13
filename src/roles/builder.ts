@@ -2,7 +2,7 @@ import { downgradeThreshold, minTTL } from '../constants'
 import { harvest, build, upgrade } from 'roles/utils'
 import { CreepActions } from 'types/main'
 
-const { BUILD, HARVEST, UPGRADE, RENEW } = CreepActions
+const { BUILD, HARVEST, UPGRADE } = CreepActions
 
 // The build method is not instant and complate, so we have to do some state mgmt
 //  to manage the non-binary states between full and empty, but working.

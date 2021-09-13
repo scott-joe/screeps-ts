@@ -1,13 +1,13 @@
 'use strict';Object.defineProperty(exports,'__esModule',{value:true});const minTTL = 500;
 const downgradeThreshold = 5000;
 const censusDefaults = {
-    HARVESTER: { min: 2, cur: 0, unlock: 1 },
-    BUILDER: { min: 4, cur: 0, unlock: 1 },
-    MECHANIC: { min: 1, cur: 0, unlock: 2 },
-    GRUNT: { min: 2, cur: 0, unlock: 3 },
-    RANGER: { min: 2, cur: 0, unlock: 3 },
-    MEDIC: { min: 1, cur: 0, unlock: 3 },
-    SCOUT: { min: 1, cur: 0, unlock: 4 }
+    HARVESTER: { max: 2, cur: 0, unlock: 1 },
+    BUILDER: { max: 4, cur: 0, unlock: 1 },
+    MECHANIC: { max: 1, cur: 0, unlock: 2 },
+    GRUNT: { max: 2, cur: 0, unlock: 3 },
+    RANGER: { max: 2, cur: 0, unlock: 3 },
+    MEDIC: { max: 1, cur: 0, unlock: 3 },
+    SCOUT: { max: 1, cur: 0, unlock: 4 }
 };
 const creepTemplates = {
     HARVESTER: [WORK, CARRY, MOVE],
@@ -104,30 +104,30 @@ var RecipeSort;
 (function (RecipeSort) {
     RecipeSort["STRIPED"] = "STRIPED";
     RecipeSort["FLAT"] = "FLAT";
-})(RecipeSort || (RecipeSort = {}));const { BUILD, HARVEST: HARVEST$1, UPGRADE: UPGRADE$1, RENEW } = CreepActions;
+})(RecipeSort || (RecipeSort = {}));const { BUILD: BUILD$1, HARVEST: HARVEST$2, UPGRADE: UPGRADE$2 } = CreepActions;
 var builder = {
     run(creep) {
         var _a, _b;
         const constructionSite = creep.room.find(FIND_CONSTRUCTION_SITES)[0];
         const downgradeImminent = ((_a = creep.room.controller) === null || _a === void 0 ? void 0 : _a.ticksToDowngrade) <= downgradeThreshold;
         const controller = (_b = creep.room) === null || _b === void 0 ? void 0 : _b.controller;
-        let action = creep.memory.action || HARVEST$1;
-        if (action !== HARVEST$1 && creep.energyEmpty()) {
-            action = HARVEST$1;
+        let action = creep.memory.action || HARVEST$2;
+        if (action !== HARVEST$2 && creep.energyEmpty()) {
+            action = HARVEST$2;
         }
         else if (downgradeImminent && !creep.energyEmpty()) {
-            action = UPGRADE$1;
+            action = UPGRADE$2;
         }
-        else if (action === HARVEST$1 && creep.energyFull()) {
-            action = BUILD;
+        else if (action === HARVEST$2 && creep.energyFull()) {
+            action = BUILD$1;
         }
-        if (action === UPGRADE$1) {
+        if (action === UPGRADE$2) {
             upgrade(creep, controller);
         }
-        else if (action === BUILD && constructionSite) {
+        else if (action === BUILD$1 && constructionSite) {
             build(creep, constructionSite);
         }
-        else if (action === HARVEST$1) {
+        else if (action === HARVEST$2) {
             harvest(creep);
         }
         else {
@@ -135,7 +135,7 @@ var builder = {
         }
         creep.memory.action = action;
     }
-};const { TRANSFER, HARVEST, UPGRADE } = CreepActions;
+};const { TRANSFER, HARVEST: HARVEST$1, UPGRADE: UPGRADE$1 } = CreepActions;
 const getValidTransferTarget = (creep) => {
     const storageStructureTypeConsts = [
         STRUCTURE_SPAWN,
@@ -155,6 +155,45 @@ var harvester = {
         const downgradeImminent = ((_a = creep.room.controller) === null || _a === void 0 ? void 0 : _a.ticksToDowngrade) <= downgradeThreshold;
         const transferTarget = getValidTransferTarget(creep);
         const controller = (_b = creep.room) === null || _b === void 0 ? void 0 : _b.controller;
+        let action = creep.memory.action || HARVEST$1;
+        if (action !== HARVEST$1 && creep.energyEmpty()) {
+            action = HARVEST$1;
+        }
+        else if (downgradeImminent && !creep.energyEmpty()) {
+            action = UPGRADE$1;
+        }
+        else if (action === HARVEST$1 && creep.energyFull()) {
+            if (!!transferTarget) {
+                action = TRANSFER;
+            }
+            else {
+                action = UPGRADE$1;
+            }
+        }
+        else if (action === TRANSFER && !!!transferTarget) {
+            action = UPGRADE$1;
+        }
+        if (action === UPGRADE$1) {
+            upgrade(creep, controller);
+        }
+        else if (action === TRANSFER) {
+            transfer(creep, transferTarget);
+        }
+        else if (action === HARVEST$1) {
+            harvest(creep);
+        }
+        else {
+            upgrade(creep, controller);
+        }
+        creep.memory.action = action;
+    }
+};const { BUILD, HARVEST, UPGRADE } = CreepActions;
+var mechanic = {
+    run(creep) {
+        var _a, _b;
+        const constructionSite = creep.room.find(FIND_CONSTRUCTION_SITES)[0];
+        const downgradeImminent = ((_a = creep.room.controller) === null || _a === void 0 ? void 0 : _a.ticksToDowngrade) <= downgradeThreshold;
+        const controller = (_b = creep.room) === null || _b === void 0 ? void 0 : _b.controller;
         let action = creep.memory.action || HARVEST;
         if (action !== HARVEST && creep.energyEmpty()) {
             action = HARVEST;
@@ -163,21 +202,13 @@ var harvester = {
             action = UPGRADE;
         }
         else if (action === HARVEST && creep.energyFull()) {
-            if (!!transferTarget) {
-                action = TRANSFER;
-            }
-            else {
-                action = UPGRADE;
-            }
-        }
-        else if (action === TRANSFER && !!!transferTarget) {
-            action = UPGRADE;
+            action = BUILD;
         }
         if (action === UPGRADE) {
             upgrade(creep, controller);
         }
-        else if (action === TRANSFER) {
-            transfer(creep, transferTarget);
+        else if (action === BUILD && constructionSite) {
+            build(creep, constructionSite);
         }
         else if (action === HARVEST) {
             harvest(creep);
@@ -228,7 +259,7 @@ var harvester = {
             const cfg = census[roleId];
             const role = roleId;
             if (condition(cfg.unlock, controllerLevel)) {
-                for (let i = 1; i <= cfg.min; i++) {
+                for (let i = 1; i <= cfg.max; i++) {
                     output.push(role);
                 }
             }
@@ -236,22 +267,13 @@ var harvester = {
         return output;
     }
     shouldSpawn(role, census) {
-        const haveRoom = census[role].cur < census[role].min;
+        const haveRoom = census[role].cur < census[role].max;
         const atFullEnergy = this.energyAvailable === this.energyCapacity;
         return haveRoom && atFullEnergy;
     }
     recruit(role, census, spawnQueue) {
         if (this.shouldSpawn(role, census)) {
-            const result = this.spawnCreep(role);
-            if (result) {
-                console.log(`🟢 Successfully spawned ${role}`);
-                spawnQueue.shift();
-                census[role].cur += 1;
-            }
-            else {
-                console.log(`🔴 Spawning error ${result} for ${role}`);
-            }
-            return result;
+            return this.spawnCreep(role);
         }
         else {
             return false;
@@ -263,7 +285,7 @@ var harvester = {
         this.room = room;
         this.spawns = this.room.find(FIND_MY_SPAWNS);
         this.memory = this.room.memory;
-        this.spawnQueue = this.memory.spawnQueue || [];
+        this.spawnQueue = this.memory.spawnQueue || undefined;
         this.controllerLevel = this.memory.controllerLevel || ((_a = room.controller) === null || _a === void 0 ? void 0 : _a.level);
         this.garrison = new Garrison(this.spawns[0]);
         this.census = this.memory.census || censusDefaults;
@@ -279,6 +301,9 @@ var harvester = {
                         break;
                     case CreepRole.BUILDER:
                         builder.run(creep);
+                        break;
+                    case CreepRole.MECHANIC:
+                        mechanic.run(creep);
                         break;
                 }
             }
@@ -310,24 +335,27 @@ var harvester = {
             if (prevRCL !== curRCL) {
                 const isEqual = (unlockLevel, controllerLevel) => controllerLevel === unlockLevel;
                 const newCreeps = this.garrison.generateSpawnQueue(this.census, curRCL, isEqual);
-                this.spawnQueue.concat(newCreeps);
+                this.spawnQueue = [...this.spawnQueue, ...newCreeps];
             }
         }
         return curRCL;
     }
     main() {
         const isGtOrEqual = (unlockLevel, controllerLevel) => controllerLevel >= unlockLevel;
-        this.spawnQueue =
-            this.spawnQueue.length > 0
-                ? this.spawnQueue
-                : this.garrison.generateSpawnQueue(this.census, this.controllerLevel, isGtOrEqual);
+        if (this.spawnQueue === undefined)
+            this.spawnQueue = this.garrison.generateSpawnQueue(this.census, this.controllerLevel, isGtOrEqual);
         this.controllerLevel = this.updateRCL(this.room);
         for (const id in this.spawns) {
             const spawn = this.spawns[id];
             if (!this.isSpawning(spawn)) {
-                const nextCreep = this.spawnQueue[0];
-                if (nextCreep) {
-                    this.garrison.recruit(nextCreep, this.census, this.spawnQueue);
+                const role = this.spawnQueue[0];
+                if (role) {
+                    const result = this.garrison.recruit(role, this.census, this.spawnQueue);
+                    if (result) {
+                        console.log(`🟢 Successfully spawned ${role}`);
+                        this.spawnQueue.shift();
+                        this.census[role].cur += 1;
+                    }
                 }
             }
         }
