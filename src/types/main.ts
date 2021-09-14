@@ -1,8 +1,4 @@
-export type CensusStatus = {
-    max: number
-    cur: number
-    unlock: number
-}
+import { CensusRecords } from "controllers/Census";
 
 export enum CreepRole {
     HARVESTER = 'HARVESTER',
@@ -30,9 +26,9 @@ export enum CreepActions {
     IDLE = 'IDLE'
 }
 
-export interface Census {
-    [x: string]: CensusStatus
-}
+// export type ICensus = {
+//     [x: string]: CensusStatus
+// }
 
 // TODO: USE THIS?
 export enum Division {
@@ -41,24 +37,26 @@ export enum Division {
 }
 
 // TODO: USE THIS?
-export enum Strategy {
-    RAID = 'RAID',
-    CLOISTER = 'CLOISTER',
-    ENTERPRISE = 'ENTERPRISE'
-}
+// export enum Strategy {
+//     RAID = 'RAID',
+//     CLOISTER = 'CLOISTER',
+//     ENTERPRISE = 'ENTERPRISE'
+// }
 
-export enum RecipeSort {
-    STRIPED = 'STRIPED',
-    FLAT = 'FLAT'
-}
+// TODO: USE THIS?
+// export enum RecipeSort {
+//     STRIPED = 'STRIPED',
+//     FLAT = 'FLAT'
+// }
 
 export type CreepTemplateList = {
     [property in CreepRole]: BodyPartConstant[]
 }
 
-export type MaintenanceTargetList = {
-    [property in Division]: StructureConstant[]
-}
+// TODO: USE THIS?
+// export type MaintenanceTargetList = {
+//     [property in Division]: StructureConstant[]
+// }
 
 declare global {
     /*
@@ -87,10 +85,20 @@ declare global {
         energyEmpty: Function
         renew: Function
         needsRenew: Function
+        harvestEnergy: Function
+        mine: Function
+        extract: Function
+        transferEnergy: Function
+        upgrade: Function
+        buildConstructionSite: Function
+    }
+
+    interface StructureSpawn {
+        isSpawning: Function
     }
 
     interface RoomMemory {
-        census: Census
+        census: CensusRecords
         spawnQueue: CreepRole[]
         controllerLevel: number
     }

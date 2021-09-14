@@ -1,5 +1,4 @@
 import { downgradeThreshold, minTTL } from '../constants'
-import { harvest, build, upgrade } from 'roles/utils'
 import { CreepActions } from 'types/main'
 
 const { BUILD, HARVEST, UPGRADE } = CreepActions
@@ -32,13 +31,13 @@ export default {
 
         // Implement the above decided action
         if (action === UPGRADE) {
-            upgrade(creep, controller)
+            creep.upgrade(controller)
         } else if (action === BUILD && constructionSite) {
-            build(creep, constructionSite)
+            creep.buildConstructionSite(constructionSite)
         } else if (action === HARVEST) {
-            harvest(creep)
+            creep.harvestEnergy()
         } else {
-            upgrade(creep, controller)
+            creep.upgrade(controller)
         }
 
         // Save the changed action into Memory

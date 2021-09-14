@@ -1,9 +1,6 @@
 import { downgradeThreshold } from '../constants'
-import { harvest, transfer, upgrade } from 'roles/utils'
 import { CreepActions } from 'types/main'
 
-// TODO: FIND BASED ON DIVISION[MILITARY|CIVILIAN]
-// TODO: PRIORITIZE CONSTRUCTION
 const { TRANSFER, HARVEST, UPGRADE } = CreepActions
 type storageStructureType = StructureSpawn | StructureExtension | StructureContainer | StructureStorage
 
@@ -21,7 +18,9 @@ const getValidTransferTarget = (creep: Creep): storageStructureType | null => {
     })
     // Filter down to just those with some open capacity
     // let transferTargets: storageStructureType[] = list.filter((item: storageStructureType) => item.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
-    const transferTarget: storageStructureType | undefined = list.find(item => item.store.getFreeCapacity(RESOURCE_ENERGY)! > 0)
+    const transferTarget: storageStructureType | undefined = list.find(
+        item => item.store.getFreeCapacity(RESOURCE_ENERGY)! > 0
+    )
     // Send the 1st result or null
     return !!transferTarget ? transferTarget : null
 }
@@ -64,13 +63,13 @@ export default {
 
         // Implement the above decided action
         if (action === UPGRADE) {
-            upgrade(creep, controller)
+            creep.upgrade(controller)
         } else if (action === TRANSFER) {
-            transfer(creep, transferTarget!)
+            creep.transferEnergy(transferTarget!)
         } else if (action === HARVEST) {
-            harvest(creep)
+            creep.harvestEnergy()
         } else {
-            upgrade(creep, controller)
+            creep.upgrade(controller)
         }
 
         // Save the changed action into Memory

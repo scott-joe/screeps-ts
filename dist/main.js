@@ -1,14 +1,5 @@
 'use strict';Object.defineProperty(exports,'__esModule',{value:true});const minTTL = 500;
 const downgradeThreshold = 5000;
-const censusDefaults = {
-    HARVESTER: { max: 2, cur: 0, unlock: 1 },
-    BUILDER: { max: 4, cur: 0, unlock: 1 },
-    MECHANIC: { max: 1, cur: 0, unlock: 2 },
-    GRUNT: { max: 2, cur: 0, unlock: 3 },
-    RANGER: { max: 2, cur: 0, unlock: 3 },
-    MEDIC: { max: 1, cur: 0, unlock: 3 },
-    SCOUT: { max: 1, cur: 0, unlock: 4 }
-};
 const creepTemplates = {
     HARVESTER: [WORK, CARRY, MOVE],
     BUILDER: [WORK, CARRY, MOVE],
@@ -17,7 +8,13 @@ const creepTemplates = {
     RANGER: [TOUGH, RANGED_ATTACK, MOVE],
     MEDIC: [HEAL, MOVE],
     SCOUT: [CLAIM, MOVE]
-};Creep.prototype.energyFull = function () {
+};const visOrange = {
+    visualizePathStyle: { stroke: '#ffaa00' }
+};
+const visWhite = {
+    visualizePathStyle: { stroke: '#ffffff' }
+};
+Creep.prototype.energyFull = function () {
     return this.store[RESOURCE_ENERGY] === this.store.getCapacity(RESOURCE_ENERGY);
 };
 Creep.prototype.energyEmpty = function () {
@@ -29,40 +26,59 @@ Creep.prototype.needsRenew = function () {
 };
 Creep.prototype.renew = function (spawn) {
     if (spawn.renewCreep(this) === ERR_NOT_IN_RANGE) {
-        this.moveTo(spawn, {
-            visualizePathStyle: { stroke: '#ffaa00' }
-        });
-    }
-};const harvest = (creep) => {
-    const source = creep.room.find(FIND_SOURCES)[0];
-    if (creep.harvest(source) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(source, {
-            visualizePathStyle: { stroke: '#ffaa00' }
-        });
+        this.moveTo(spawn, visOrange);
     }
 };
-const transfer = (creep, target) => {
-    if (target.store.getFreeCapacity(RESOURCE_ENERGY) > 0) {
-        if (creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-            creep.moveTo(target, {
-                visualizePathStyle: { stroke: '#ffffff' }
-            });
+Creep.prototype.harvestEnergy = function () {
+    const droppedResources = this.room.find(FIND_DROPPED_RESOURCES)[0];
+    const tombestone = this.room.find(FIND_TOMBSTONES)[0];
+    if (droppedResources) {
+        if (this.pickup(droppedResources) === ERR_NOT_IN_RANGE) {
+            this.moveTo(droppedResources, visOrange);
+        }
+    }
+    else if (tombestone) {
+        if (this.withdraw(tombestone, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+            this.moveTo(tombestone);
+        }
+    }
+    else {
+        const energySource = this.room.find(FIND_SOURCES)[0];
+        if (this.harvest(energySource) === ERR_NOT_IN_RANGE) {
+            this.moveTo(energySource, visOrange);
         }
     }
 };
-const upgrade = (creep, controller) => {
-    if (creep.upgradeController(controller) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(controller, {
-            visualizePathStyle: { stroke: '#ffffff' }
-        });
+Creep.prototype.mine = function () {
+    const sources = this.room.find(FIND_MINERALS);
+    if (this.harvest(sources[0]) === ERR_NOT_IN_RANGE) {
+        this.moveTo(sources[0], visOrange);
     }
 };
-const build = (creep, constructionSite) => {
-    if (creep.build(constructionSite) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(constructionSite, {
-            visualizePathStyle: { stroke: '#ffffff' }
-        });
+Creep.prototype.extract = function () {
+    const sources = this.room.find(FIND_DEPOSITS);
+    if (this.harvest(sources[0]) === ERR_NOT_IN_RANGE) {
+        this.moveTo(sources[0], visOrange);
     }
+};
+Creep.prototype.transferEnergy = function (target) {
+    if (target.store.getFreeCapacity(RESOURCE_ENERGY) > 0) {
+        if (this.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+            this.moveTo(target, visWhite);
+        }
+    }
+};
+Creep.prototype.upgrade = function (controller) {
+    if (this.upgradeController(controller) === ERR_NOT_IN_RANGE) {
+        this.moveTo(controller, visWhite);
+    }
+};
+Creep.prototype.buildConstructionSite = function (constructionSite) {
+    if (this.build(constructionSite) === ERR_NOT_IN_RANGE) {
+        this.moveTo(constructionSite, visWhite);
+    }
+};Spawn.prototype.isSpawning = function () {
+    return this.spawning !== null;
 };var CreepRole;
 (function (CreepRole) {
     CreepRole["HARVESTER"] = "HARVESTER";
@@ -93,18 +109,7 @@ var Division;
 (function (Division) {
     Division["DEFENSE"] = "DEFENSE";
     Division["CIVILIAN"] = "CIVILIAN";
-})(Division || (Division = {}));
-var Strategy;
-(function (Strategy) {
-    Strategy["RAID"] = "RAID";
-    Strategy["CLOISTER"] = "CLOISTER";
-    Strategy["ENTERPRISE"] = "ENTERPRISE";
-})(Strategy || (Strategy = {}));
-var RecipeSort;
-(function (RecipeSort) {
-    RecipeSort["STRIPED"] = "STRIPED";
-    RecipeSort["FLAT"] = "FLAT";
-})(RecipeSort || (RecipeSort = {}));const { BUILD: BUILD$1, HARVEST: HARVEST$2, UPGRADE: UPGRADE$2 } = CreepActions;
+})(Division || (Division = {}));const { BUILD: BUILD$1, HARVEST: HARVEST$2, UPGRADE: UPGRADE$2 } = CreepActions;
 var builder = {
     run(creep) {
         var _a, _b;
@@ -122,16 +127,16 @@ var builder = {
             action = BUILD$1;
         }
         if (action === UPGRADE$2) {
-            upgrade(creep, controller);
+            creep.upgrade(controller);
         }
         else if (action === BUILD$1 && constructionSite) {
-            build(creep, constructionSite);
+            creep.buildConstructionSite(constructionSite);
         }
         else if (action === HARVEST$2) {
-            harvest(creep);
+            creep.harvestEnergy();
         }
         else {
-            upgrade(creep, controller);
+            creep.upgrade(controller);
         }
         creep.memory.action = action;
     }
@@ -174,16 +179,16 @@ var harvester = {
             action = UPGRADE$1;
         }
         if (action === UPGRADE$1) {
-            upgrade(creep, controller);
+            creep.upgrade(controller);
         }
         else if (action === TRANSFER) {
-            transfer(creep, transferTarget);
+            creep.transferEnergy(transferTarget);
         }
         else if (action === HARVEST$1) {
-            harvest(creep);
+            creep.harvestEnergy();
         }
         else {
-            upgrade(creep, controller);
+            creep.upgrade(controller);
         }
         creep.memory.action = action;
     }
@@ -205,24 +210,56 @@ var mechanic = {
             action = BUILD;
         }
         if (action === UPGRADE) {
-            upgrade(creep, controller);
+            creep.upgrade(controller);
         }
         else if (action === BUILD && constructionSite) {
-            build(creep, constructionSite);
+            creep.buildConstructionSite(constructionSite);
         }
         else if (action === HARVEST) {
-            harvest(creep);
+            creep.harvestEnergy();
         }
         else {
-            upgrade(creep, controller);
+            creep.upgrade(controller);
         }
         creep.memory.action = action;
     }
-};class Garrison {
-    constructor(spawn) {
+};const defaultConfig = {
+    HARVESTER: { max: 2, cur: 0, unlock: 1 },
+    BUILDER: { max: 4, cur: 0, unlock: 1 },
+    MECHANIC: { max: 1, cur: 0, unlock: 2 },
+    GRUNT: { max: 2, cur: 0, unlock: 3 },
+    RANGER: { max: 2, cur: 0, unlock: 3 },
+    MEDIC: { max: 1, cur: 0, unlock: 3 },
+    SCOUT: { max: 1, cur: 0, unlock: 4 }
+};
+class Census {
+    constructor(room) {
+        this.room = room;
+        this.memory = room.memory.census || defaultConfig;
+    }
+    add(role) {
+        this.memory[role].cur += 1;
+        this.save();
+    }
+    remove(role) {
+        this.memory[role].cur -= 1;
+        this.save();
+    }
+    getRecord(role) {
+        return this.memory[role];
+    }
+    getRecords() {
+        return this.memory;
+    }
+    save() {
+        this.room.memory.census = this.memory;
+    }
+}class Garrison {
+    constructor(spawn, room) {
         this.spawn = spawn;
         this.energyAvailable = spawn.room.energyAvailable;
         this.energyCapacity = spawn.room.energyCapacityAvailable;
+        this.census = new Census(room);
     }
     generateCreepRecipe(template, energy) {
         let parts = [];
@@ -244,6 +281,20 @@ var mechanic = {
         }
         return parts;
     }
+    generateSpawnQueue(controllerLevel, condition) {
+        const output = [];
+        const census = this.census.getRecords();
+        for (const id in census) {
+            const cfg = census[id];
+            const role = id;
+            if (condition(cfg.unlock, controllerLevel)) {
+                for (let i = 1; i <= cfg.max; i++) {
+                    output.push(role);
+                }
+            }
+        }
+        return output;
+    }
     spawnCreep(role) {
         const name = `${role}-${Game.time}`;
         const template = creepTemplates[role];
@@ -253,26 +304,11 @@ var mechanic = {
         });
         return result === 0 ? true : false;
     }
-    generateSpawnQueue(census, controllerLevel, condition) {
-        const output = [];
-        for (const roleId in census) {
-            const cfg = census[roleId];
-            const role = roleId;
-            if (condition(cfg.unlock, controllerLevel)) {
-                for (let i = 1; i <= cfg.max; i++) {
-                    output.push(role);
-                }
-            }
-        }
-        return output;
-    }
-    shouldSpawn(role, census) {
-        const haveRoom = census[role].cur < census[role].max;
+    recruit(role) {
+        const censusRecords = this.census.getRecords();
+        const haveRoom = censusRecords[role].cur < censusRecords[role].max;
         const atFullEnergy = this.energyAvailable === this.energyCapacity;
-        return haveRoom && atFullEnergy;
-    }
-    recruit(role, census, spawnQueue) {
-        if (this.shouldSpawn(role, census)) {
+        if (haveRoom && atFullEnergy) {
             return this.spawnCreep(role);
         }
         else {
@@ -283,14 +319,13 @@ var mechanic = {
     constructor(room) {
         var _a;
         this.room = room;
-        this.spawns = this.room.find(FIND_MY_SPAWNS);
-        this.memory = this.room.memory;
+        this.spawns = room.find(FIND_MY_SPAWNS);
+        this.memory = room.memory;
         this.spawnQueue = this.memory.spawnQueue || undefined;
         this.controllerLevel = this.memory.controllerLevel || ((_a = room.controller) === null || _a === void 0 ? void 0 : _a.level);
-        this.garrison = new Garrison(this.spawns[0]);
-        this.census = this.memory.census || censusDefaults;
+        this.garrison = new Garrison(this.spawns[0], room);
     }
-    applyCreepRoleBehavior() {
+    applyCreepRoles() {
         const creeps = Game.creeps;
         for (const name in creeps) {
             const creep = creeps[name];
@@ -309,59 +344,52 @@ var mechanic = {
             }
         }
     }
-    removeFromCensus(role) {
-        this.spawnQueue.unshift(role);
-        this.census[role].cur -= 1;
-    }
     save() {
         this.memory.controllerLevel = this.controllerLevel;
         this.memory.spawnQueue = this.spawnQueue;
-        this.memory.census = this.census;
     }
     removeFromMemory(name, role) {
         if (delete Memory.creeps[name]) {
             console.log(`🔶 Removing ${name} from Memory & Census`);
-            this.removeFromCensus(role);
+            this.spawnQueue.unshift(role);
         }
-    }
-    isSpawning(spawn) {
-        return spawn.spawning !== null;
     }
     updateRCL(room) {
         var _a;
-        const prevRCL = this.controllerLevel;
-        const curRCL = (_a = room.controller) === null || _a === void 0 ? void 0 : _a.level;
-        if (!!prevRCL) {
-            if (prevRCL !== curRCL) {
+        const prev = this.controllerLevel;
+        const cur = (_a = room.controller) === null || _a === void 0 ? void 0 : _a.level;
+        if (!!prev) {
+            if (prev !== cur) {
                 const isEqual = (unlockLevel, controllerLevel) => controllerLevel === unlockLevel;
-                const newCreeps = this.garrison.generateSpawnQueue(this.census, curRCL, isEqual);
+                const newCreeps = this.garrison.generateSpawnQueue(cur, isEqual);
                 this.spawnQueue = [...this.spawnQueue, ...newCreeps];
             }
         }
-        return curRCL;
+        return cur;
     }
     main() {
         const isGtOrEqual = (unlockLevel, controllerLevel) => controllerLevel >= unlockLevel;
         if (this.spawnQueue === undefined)
-            this.spawnQueue = this.garrison.generateSpawnQueue(this.census, this.controllerLevel, isGtOrEqual);
+            this.spawnQueue = this.garrison.generateSpawnQueue(this.controllerLevel, isGtOrEqual);
         this.controllerLevel = this.updateRCL(this.room);
         for (const id in this.spawns) {
             const spawn = this.spawns[id];
-            if (!this.isSpawning(spawn)) {
+            if (!spawn.isSpawning(spawn)) {
                 const role = this.spawnQueue[0];
                 if (role) {
-                    const result = this.garrison.recruit(role, this.census, this.spawnQueue);
+                    const result = this.garrison.recruit(role);
                     if (result) {
-                        console.log(`🟢 Successfully spawned ${role}`);
+                        console.log(`🟢 Spawning ${role}`);
                         this.spawnQueue.shift();
-                        this.census[role].cur += 1;
+                        this.garrison.census.add(role);
                     }
                 }
             }
         }
-        this.applyCreepRoleBehavior();
+        this.applyCreepRoles();
         for (const name in Memory.creeps) {
             if (!(name in Game.creeps)) {
+                this.garrison.census.remove(Memory.creeps[name].role);
                 this.removeFromMemory(name, Memory.creeps[name].role);
             }
         }

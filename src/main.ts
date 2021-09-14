@@ -1,4 +1,4 @@
-import 'extensions/Creep' // Extend the Screeps API
+import 'extensions' // Extend Screeps classes
 import Base from 'controllers/Base'
 
 export const loop = () => {

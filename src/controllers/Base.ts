@@ -1,36 +1,34 @@
-import { censusDefaults } from '../constants'
 import { harvester, builder, mechanic } from 'roles'
-import { Census, CreepRole } from 'types/main'
+import { CreepRole } from 'types/main'
 import { Garrison } from './Garrison'
 
-// TODO: IF THERE ARE NO SPAWNS THAT NEED ENERGY, UPGRADE RC
-
+/*
+    THE BASE IS RESPONSIBLE FOR CONTROLLING THE ROOM
+*/
 export default class Base {
-    private room: Room
-    private spawns: StructureSpawn[]
     private garrison: Garrison
-
+    private room: Room
     private memory: RoomMemory
+    private spawns: StructureSpawn[]
     private spawnQueue: CreepRole[]
-    private census: Census
     private controllerLevel: number
 
     constructor(room: Room) {
         this.room = room
-        this.spawns = this.room.find(FIND_MY_SPAWNS) // <= 3
-        this.memory = this.room.memory
+        this.spawns = room.find(FIND_MY_SPAWNS) // <= 3
+        this.memory = room.memory
         this.spawnQueue = this.memory.spawnQueue || undefined
         this.controllerLevel = this.memory.controllerLevel || room.controller?.level!
-        this.garrison = new Garrison(this.spawns[0])
-        this.census = this.memory.census || censusDefaults
+        this.garrison = new Garrison(this.spawns[0], room)
     }
 
-    private applyCreepRoleBehavior(): void {
+    private applyCreepRoles(): void {
         const creeps: { [name: string]: Creep } = Game.creeps
         for (const name in creeps) {
-            const creep = creeps[name]
+            const creep: Creep = creeps[name]
 
-            // Creeps show up in the list while spawning...
+            // Creeps show up in the list while spawning,
+            //  so we have to check that they're ready
             if (!creep.spawning) {
                 switch (creep.memory.role) {
                     case CreepRole.HARVESTER:
@@ -61,62 +59,47 @@ export default class Base {
         }
     }
 
-    // TODO: Move to census.remove
-    private removeFromCensus(role: CreepRole): void {
-        // Put this creep's role back at the front of the queue
-        this.spawnQueue.unshift(role)
-        // Remove them from the census
-        this.census[role].cur -= 1
-    }
-
-    // TODO: Move use of this up to top level?
     private save() {
         this.memory.controllerLevel = this.controllerLevel
-        this.memory.spawnQueue = this.spawnQueue
-        this.memory.census = this.census
+        this.memory.spawnQueue= this.spawnQueue
     }
 
-    // TODO: Move to memory.remove?
     private removeFromMemory(name: string, role: CreepRole) {
         if (delete Memory.creeps[name]) {
             console.log(`🔶 Removing ${name} from Memory & Census`)
-            this.removeFromCensus(role)
+            // Put this creep's role back at the front of the queue
+            this.spawnQueue.unshift(role)
         }
-    }
-
-    // TODO: Move to Base utils?
-    private isSpawning(spawn: StructureSpawn): boolean {
-        // Will be a creep object if spawning and null if not
-        return spawn.spawning !== null
     }
 
     private updateRCL(room: Room): number {
         // Check for existing value in Memory
-        const prevRCL = this.controllerLevel
+        const prev = this.controllerLevel
         // Check live RCL
-        const curRCL = room.controller?.level!
-        // If there is a prevRCL set...
-        if (!!prevRCL) {
+        const cur = room.controller?.level!
+        // If there is a prev set...
+        if (!!prev) {
             // And it's changed since last tick
-            if (prevRCL !== curRCL) {
+            if (prev !== cur) {
                 // Comparison by which to decide to add the creep role to the queue
                 const isEqual = (unlockLevel: number, controllerLevel: number): boolean =>
                     controllerLevel === unlockLevel
                 // Get the new creeps if any are unlocked at this level
-                const newCreeps = this.garrison.generateSpawnQueue(this.census, curRCL, isEqual)
+                const newCreeps = this.garrison.generateSpawnQueue(cur, isEqual)
                 // Add them to the end of the queue
                 this.spawnQueue = [...this.spawnQueue, ...newCreeps]
             }
         }
 
         // Return current controller level
-        return curRCL
+        return cur
     }
 
     public main(): void {
         // Make sure the Base has a spawn queue
         const isGtOrEqual = (unlockLevel: number, controllerLevel: number): boolean => controllerLevel >= unlockLevel
-        if (this.spawnQueue === undefined) this.spawnQueue = this.garrison.generateSpawnQueue(this.census, this.controllerLevel, isGtOrEqual)
+        if (this.spawnQueue === undefined)
+            this.spawnQueue = this.garrison.generateSpawnQueue(this.controllerLevel, isGtOrEqual)
         this.controllerLevel = this.updateRCL(this.room)
 
         // Recruit new creep and add to census
@@ -124,27 +107,28 @@ export default class Base {
             const spawn: StructureSpawn = this.spawns[id]
 
             // Is the Spawn busy?
-            if (!this.isSpawning(spawn)) {
+            if (!spawn.isSpawning(spawn)) {
                 const role: CreepRole = this.spawnQueue[0]
                 if (role) {
-                    const result = this.garrison.recruit(role, this.census, this.spawnQueue)
+                    const result = this.garrison.recruit(role)
                     // Did it succeed?
                     if (result) {
-                        console.log(`🟢 Successfully spawned ${role}`)
+                        console.log(`🟢 Spawning ${role}`)
                         // Remove the creep's role from the queue
                         this.spawnQueue.shift()
                         // Add the role to the census
-                        this.census[role].cur += 1
+                        this.garrison.census.add(role)
                     }
                 }
             }
         }
 
-        this.applyCreepRoleBehavior()
+        this.applyCreepRoles()
 
         // Clean up Memory with dead creeps
         for (const name in Memory.creeps) {
             if (!(name in Game.creeps)) {
+                this.garrison.census.remove(Memory.creeps[name].role)
                 this.removeFromMemory(name, Memory.creeps[name].role)
             }
         }
