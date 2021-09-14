@@ -73,11 +73,19 @@ declare global {
         log: any
     }
 
+    type PathSegment = {
+        x: number
+        y: number
+        dx: number
+        dy: number
+        direction: DirectionConstant
+    }
     interface CreepMemory {
         room?: string
         role: CreepRole
         division?: Division
         action?: CreepActions
+        path?: PathSegment[]
     }
 
     interface Creep {

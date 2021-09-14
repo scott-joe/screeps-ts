@@ -1,9 +1,14 @@
+import { Position } from 'source-map'
 import { minTTL } from '../constants'
 
 const visOrange = {
+    reusePath: 30,
+    serializeMemory: true,
     visualizePathStyle: { stroke: '#ffaa00' }
 }
 const visWhite = {
+    reusePath: 30,
+    serializeMemory: true,
     visualizePathStyle: { stroke: '#ffffff' }
 }
 
@@ -82,7 +87,32 @@ Creep.prototype.transferEnergy = function (target: Structure): void {
 // Upgrade room controller
 Creep.prototype.upgrade = function (controller: StructureController): void {
     if (this.upgradeController(controller) === ERR_NOT_IN_RANGE) {
-        this.moveTo(controller, visWhite)
+        this.moveTo(controller, visOrange)
+
+        // const destination = controller // TEMPORARY FOR ABSTRACTION
+        // LOOK FOR PATH IN MEMORY
+        // let path: PathSegment[] | undefined = this.memory?.path || undefined
+        // const pathEnd: PathSegment = path && path[path?.length - 1]
+
+        // // Check to see if the XY of the stored path isn't the same as the provided target
+        // //  if they are different, the stored path is bad and needs to be rebuilt
+        // if (!!path || !destination.pos.isEqualTo(pathEnd)) {
+        //     // IF NO, GET ONE
+        //     // creep.moveByPath(path);
+        //     this.pos.findPathTo(destination.pos, {
+        //         maxOps: 200,
+        //         ignoreCreeps: true,
+        //         maxRooms: 1, // only if in simulator?
+        //         // ignoreRoads: false // Pathfinder only
+        //     })
+
+        //     // THEN STORE IT IN MEMORY
+        //     this.memory.path = Room.serializePath(path);
+        // }
+        // if (path.length) {
+        //     // IF YES, USE IT
+        //     this.moveByPath(path)
+        // }
     }
 }
 

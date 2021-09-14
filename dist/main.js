@@ -9,9 +9,13 @@ const creepTemplates = {
     MEDIC: [HEAL, MOVE],
     SCOUT: [CLAIM, MOVE]
 };const visOrange = {
+    reusePath: 30,
+    serializeMemory: true,
     visualizePathStyle: { stroke: '#ffaa00' }
 };
 const visWhite = {
+    reusePath: 30,
+    serializeMemory: true,
     visualizePathStyle: { stroke: '#ffffff' }
 };
 Creep.prototype.energyFull = function () {
@@ -71,7 +75,7 @@ Creep.prototype.transferEnergy = function (target) {
 };
 Creep.prototype.upgrade = function (controller) {
     if (this.upgradeController(controller) === ERR_NOT_IN_RANGE) {
-        this.moveTo(controller, visWhite);
+        this.moveTo(controller, visOrange);
     }
 };
 Creep.prototype.buildConstructionSite = function (constructionSite) {
