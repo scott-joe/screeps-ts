@@ -1,21 +1,33 @@
 import { CreepRole } from 'types/main'
+import { isEqual, isGtOrEqual } from 'utils/base'
 import { creepTemplates } from '../constants'
 import Census, { CensusRecords } from './Census'
+
+const { HARVESTER } = CreepRole
 
 /*
     THE GARRISON IS RESPONSIBLE FOR UNIT PRODUCTION
 */
 export class Garrison {
+    private room: Room
     private spawn: StructureSpawn
     private energyAvailable: number
     private energyCapacity: number
+    private controllerLevel: number
+    public spawnQueue: CreepRole[]
     public census: Census
 
-    constructor(spawn: StructureSpawn, room: Room) {
+    constructor(spawn: StructureSpawn, room: Room, controllerLevel: number) {
+        this.room = room
         this.spawn = spawn
+        this.controllerLevel = controllerLevel
         this.energyAvailable = spawn.room.energyAvailable
         this.energyCapacity = spawn.room.energyCapacityAvailable
         this.census = new Census(room)
+        this.spawnQueue = room.memory.spawnQueue || undefined
+
+        if (this.spawnQueue === undefined)
+            this.spawnQueue = this.generateSpawnQueue(this.controllerLevel, isGtOrEqual)
     }
 
     private generateCreepRecipe(template: BodyPartConstant[], energy: number): BodyPartConstant[] {
@@ -52,7 +64,7 @@ export class Garrison {
         return parts
     }
 
-    public generateSpawnQueue(controllerLevel: number, condition: Function): CreepRole[] {
+    public generateSpawnQueue(controllerLevel: number, predicate: Function): CreepRole[] {
         const output: CreepRole[] = []
         const census: CensusRecords = this.census.getRecords()
 
@@ -62,7 +74,7 @@ export class Garrison {
             // Get a typesafe role name
             const role = id as CreepRole
             // If our the creep should spawn yet
-            if (condition(cfg.unlock, controllerLevel)) {
+            if (predicate(cfg.unlock, controllerLevel)) {
                 for (let i = 1; i <= cfg.max; i++) {
                     output.push(role)
                 }
@@ -72,31 +84,76 @@ export class Garrison {
         return output
     }
 
-    private spawnCreep(role: CreepRole): boolean {
+    public updateSpawnQueue(controllerLevel: number): void {
+        // Get the new creeps if any are unlocked at this level
+        const newCreeps = this.generateSpawnQueue(controllerLevel, isEqual)
+        // Add them to the end of the queue
+        this.spawnQueue = [...this.spawnQueue, ...newCreeps]
+        this.save()
+    }
+
+    public buryTheDead(): void {
+        for (const name in Memory.creeps) {
+            if (!(name in Game.creeps)) {
+                this.census.remove(Memory.creeps[name].role)
+                this.removeFromMemory(name, Memory.creeps[name].role)
+            }
+        }
+
+        this.save()
+    }
+
+    private removeFromMemory(name: string, role: CreepRole): void {
+        if (delete Memory.creeps[name]) {
+            // Put this creep's role back at the front of the queue
+            this.spawnQueue.unshift(role)
+        }
+    }
+
+    private spawnCreep(role: CreepRole): void {
         const name: string = `${role}-${Game.time}`
         const template: BodyPartConstant[] = creepTemplates[role]
         const body = this.generateCreepRecipe(template, this.spawn.room.energyAvailable)
+        const opts = { memory: { role } }
 
-        const result = this.spawn.spawnCreep(body, name, {
-            memory: { role }
-        })
-
-        return result === 0 ? true : false
+        if (this.spawn.spawnCreep(body, name, opts) === 0) {
+            // Remove the creep's role from the queue
+            this.spawnQueue.shift()
+            // Add the role to the census
+            this.census.add(role)
+        }
     }
 
-    public recruit(role: CreepRole): boolean {
-        const censusRecords: CensusRecords = this.census.getRecords()
-        // Do we have room for another creep of this role?
-        const haveRoom = censusRecords[role].cur < censusRecords[role].max
-        // Are we at max energy, so they're the biggest and best they can be?
-        const atFullEnergy = this.energyAvailable === this.energyCapacity
+    public recruit(): void {
+        const role: CreepRole = this.spawnQueue[0]
+        const hasNoHarvesters = this.census.getCount(HARVESTER) === 0
+        const hasMinimumEnergy = this.energyAvailable >= 300
 
-        if (haveRoom && atFullEnergy) {
-            // Spawn a creep
-            return this.spawnCreep(role)
-        } else {
-            // Don't spawn
-            return false
+        // If Harvesters all die off don't wait for other roles to build
+        //  as it'll take forever to build everything else in the queue
+        //  before the 1st Harvester
+        if (hasNoHarvesters && hasMinimumEnergy) {
+            // Move the Harvester queue entry to the front of the queue
+            this.spawnQueue.splice(this.spawnQueue.indexOf(HARVESTER), 1)
+            this.spawnQueue.unshift(HARVESTER)
+            this.spawnCreep(HARVESTER)
+        } else if (role) {
+            // Do we have room for another creep of this role?
+            const haveRoom = this.census.hasRoomFor(role)
+            // Are we at max energy, so they're the biggest and best they can be?
+            const atFullEnergy = this.energyAvailable === this.energyCapacity
+
+            if (haveRoom && atFullEnergy) {
+                // Spawn a creep
+                this.spawnCreep(role)
+            }
         }
+
+        this.save()
+    }
+
+    private save(): void {
+        this.room.memory.spawnQueue = this.spawnQueue
+        this.room.memory.census = this.census.getRecords()
     }
 }

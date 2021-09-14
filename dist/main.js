@@ -32,12 +32,13 @@ Creep.prototype.renew = function (spawn) {
 Creep.prototype.harvestEnergy = function () {
     const droppedResources = this.room.find(FIND_DROPPED_RESOURCES)[0];
     const tombstone = this.room.find(FIND_TOMBSTONES)[0];
+    const tombstoneHasEnergy = (tombstone === null || tombstone === void 0 ? void 0 : tombstone.store.getUsedCapacity(RESOURCE_ENERGY)) > 0 || false;
     if (droppedResources) {
         if (this.pickup(droppedResources) === ERR_NOT_IN_RANGE) {
             this.moveTo(droppedResources, visOrange);
         }
     }
-    else if ((tombstone === null || tombstone === void 0 ? void 0 : tombstone.store.getUsedCapacity(RESOURCE_ENERGY)) > 0) {
+    else if (tombstoneHasEnergy) {
         if (this.withdraw(tombstone, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
             this.moveTo(tombstone);
         }
@@ -223,6 +224,11 @@ var mechanic = {
         }
         creep.memory.action = action;
     }
+};const isEqual = (unlockLevel, controllerLevel) => {
+    return controllerLevel === unlockLevel;
+};
+const isGtOrEqual = (unlockLevel, controllerLevel) => {
+    return controllerLevel >= unlockLevel;
 };const defaultConfig = {
     HARVESTER: { max: 2, cur: 0, unlock: 1 },
     BUILDER: { max: 4, cur: 0, unlock: 1 },
@@ -239,11 +245,9 @@ class Census {
     }
     add(role) {
         this.memory[role].cur += 1;
-        this.save();
     }
     remove(role) {
         this.memory[role].cur -= 1;
-        this.save();
     }
     getRecord(role) {
         return this.memory[role];
@@ -251,15 +255,24 @@ class Census {
     getRecords() {
         return this.memory;
     }
-    save() {
-        this.room.memory.census = this.memory;
+    getCount(role) {
+        return this.memory[role].cur;
     }
-}class Garrison {
-    constructor(spawn, room) {
+    hasRoomFor(role) {
+        return this.memory[role].cur < this.memory[role].max;
+    }
+}const { HARVESTER } = CreepRole;
+class Garrison {
+    constructor(spawn, room, controllerLevel) {
+        this.room = room;
         this.spawn = spawn;
+        this.controllerLevel = controllerLevel;
         this.energyAvailable = spawn.room.energyAvailable;
         this.energyCapacity = spawn.room.energyCapacityAvailable;
         this.census = new Census(room);
+        this.spawnQueue = room.memory.spawnQueue || undefined;
+        if (this.spawnQueue === undefined)
+            this.spawnQueue = this.generateSpawnQueue(this.controllerLevel, isGtOrEqual);
     }
     generateCreepRecipe(template, energy) {
         let parts = [];
@@ -281,13 +294,13 @@ class Census {
         }
         return parts;
     }
-    generateSpawnQueue(controllerLevel, condition) {
+    generateSpawnQueue(controllerLevel, predicate) {
         const output = [];
         const census = this.census.getRecords();
         for (const id in census) {
             const cfg = census[id];
             const role = id;
-            if (condition(cfg.unlock, controllerLevel)) {
+            if (predicate(cfg.unlock, controllerLevel)) {
                 for (let i = 1; i <= cfg.max; i++) {
                     output.push(role);
                 }
@@ -295,25 +308,56 @@ class Census {
         }
         return output;
     }
+    updateSpawnQueue(controllerLevel) {
+        const newCreeps = this.generateSpawnQueue(controllerLevel, isEqual);
+        this.spawnQueue = [...this.spawnQueue, ...newCreeps];
+        this.save();
+    }
+    buryTheDead() {
+        for (const name in Memory.creeps) {
+            if (!(name in Game.creeps)) {
+                this.census.remove(Memory.creeps[name].role);
+                this.removeFromMemory(name, Memory.creeps[name].role);
+            }
+        }
+        this.save();
+    }
+    removeFromMemory(name, role) {
+        if (delete Memory.creeps[name]) {
+            this.spawnQueue.unshift(role);
+        }
+    }
     spawnCreep(role) {
         const name = `${role}-${Game.time}`;
         const template = creepTemplates[role];
         const body = this.generateCreepRecipe(template, this.spawn.room.energyAvailable);
-        const result = this.spawn.spawnCreep(body, name, {
-            memory: { role }
-        });
-        return result === 0 ? true : false;
+        const opts = { memory: { role } };
+        if (this.spawn.spawnCreep(body, name, opts) === 0) {
+            this.spawnQueue.shift();
+            this.census.add(role);
+        }
     }
-    recruit(role) {
-        const censusRecords = this.census.getRecords();
-        const haveRoom = censusRecords[role].cur < censusRecords[role].max;
-        const atFullEnergy = this.energyAvailable === this.energyCapacity;
-        if (haveRoom && atFullEnergy) {
-            return this.spawnCreep(role);
+    recruit() {
+        const role = this.spawnQueue[0];
+        const hasNoHarvesters = this.census.getCount(HARVESTER) === 0;
+        const hasMinimumEnergy = this.energyAvailable >= 300;
+        if (hasNoHarvesters && hasMinimumEnergy) {
+            this.spawnQueue.splice(this.spawnQueue.indexOf(HARVESTER), 1);
+            this.spawnQueue.unshift(HARVESTER);
+            this.spawnCreep(HARVESTER);
         }
-        else {
-            return false;
+        else if (role) {
+            const haveRoom = this.census.hasRoomFor(role);
+            const atFullEnergy = this.energyAvailable === this.energyCapacity;
+            if (haveRoom && atFullEnergy) {
+                this.spawnCreep(role);
+            }
         }
+        this.save();
+    }
+    save() {
+        this.room.memory.spawnQueue = this.spawnQueue;
+        this.room.memory.census = this.census.getRecords();
     }
 }class Base {
     constructor(room) {
@@ -321,9 +365,8 @@ class Census {
         this.room = room;
         this.spawns = room.find(FIND_MY_SPAWNS);
         this.memory = room.memory;
-        this.spawnQueue = this.memory.spawnQueue || undefined;
-        this.controllerLevel = this.memory.controllerLevel || ((_a = room.controller) === null || _a === void 0 ? void 0 : _a.level);
-        this.garrison = new Garrison(this.spawns[0], room);
+        this.controllerLevel = this.memory.controllerLevel || ((_a = room.controller) === null || _a === void 0 ? void 0 : _a.level) || 1;
+        this.garrison = new Garrison(this.spawns[0], room, this.controllerLevel);
     }
     applyCreepRoles() {
         const creeps = Game.creeps;
@@ -346,13 +389,6 @@ class Census {
     }
     save() {
         this.memory.controllerLevel = this.controllerLevel;
-        this.memory.spawnQueue = this.spawnQueue;
-    }
-    removeFromMemory(name, role) {
-        if (delete Memory.creeps[name]) {
-            console.log(`🔶 Removing ${name} from Memory & Census`);
-            this.spawnQueue.unshift(role);
-        }
     }
     updateRCL(room) {
         var _a;
@@ -360,39 +396,21 @@ class Census {
         const cur = (_a = room.controller) === null || _a === void 0 ? void 0 : _a.level;
         if (!!prev) {
             if (prev !== cur) {
-                const isEqual = (unlockLevel, controllerLevel) => controllerLevel === unlockLevel;
-                const newCreeps = this.garrison.generateSpawnQueue(cur, isEqual);
-                this.spawnQueue = [...this.spawnQueue, ...newCreeps];
+                this.garrison.updateSpawnQueue(cur);
             }
         }
         return cur;
     }
     main() {
-        const isGtOrEqual = (unlockLevel, controllerLevel) => controllerLevel >= unlockLevel;
-        if (this.spawnQueue === undefined)
-            this.spawnQueue = this.garrison.generateSpawnQueue(this.controllerLevel, isGtOrEqual);
         this.controllerLevel = this.updateRCL(this.room);
         for (const id in this.spawns) {
             const spawn = this.spawns[id];
             if (!spawn.isSpawning(spawn)) {
-                const role = this.spawnQueue[0];
-                if (role) {
-                    const result = this.garrison.recruit(role);
-                    if (result) {
-                        console.log(`🟢 Spawning ${role}`);
-                        this.spawnQueue.shift();
-                        this.garrison.census.add(role);
-                    }
-                }
+                this.garrison.recruit();
             }
         }
+        this.garrison.buryTheDead();
         this.applyCreepRoles();
-        for (const name in Memory.creeps) {
-            if (!(name in Game.creeps)) {
-                this.garrison.census.remove(Memory.creeps[name].role);
-                this.removeFromMemory(name, Memory.creeps[name].role);
-            }
-        }
         this.save();
     }
 }const loop = () => {

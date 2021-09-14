@@ -1,4 +1,5 @@
 import { CreepRole } from 'types/main'
+const { HARVESTER } = CreepRole
 
 export type CensusRecord = {
     max: number
@@ -23,7 +24,6 @@ const defaultConfig: CensusRecords = {
 /*
     THE CENSUS IS RESPONSIBLE FOR KEEPING TRACK OF CREEP NUMBERS
 */
-
 export default class Census {
     private room: Room
     private memory: CensusRecords
@@ -35,12 +35,10 @@ export default class Census {
 
     public add(role: CreepRole): void {
         this.memory[role].cur += 1
-        this.save()
     }
 
     public remove(role: CreepRole): void {
         this.memory[role].cur -= 1
-        this.save()
     }
 
     public getRecord(role: CreepRole): CensusRecord {
@@ -51,7 +49,12 @@ export default class Census {
         return this.memory
     }
 
-    public save(): void {
-        this.room.memory.census = this.memory
+    public getCount(role: CreepRole): number {
+        return this.memory[role].cur
+    }
+
+    // Do we have room for another creep of this role?
+    public hasRoomFor(role: CreepRole): boolean {
+        return this.memory[role].cur < this.memory[role].max
     }
 }

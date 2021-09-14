@@ -1,3 +1,12 @@
+// Comparison by which to decide to add the creep role to the queue
+export const isEqual = (unlockLevel: number, controllerLevel: number): boolean => {
+    return controllerLevel === unlockLevel
+}
+// Make sure the Base has a spawn queue
+export const isGtOrEqual = (unlockLevel: number, controllerLevel: number): boolean => {
+    return controllerLevel >= unlockLevel
+}
+
 // var energyAvailable = 0;
 // energyAvailable += Game.spawns.Spawn1.energy;
 // _.filter(Game.structures, function(structure){
