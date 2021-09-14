@@ -31,17 +31,21 @@ Creep.prototype.renew = function (spawn: StructureSpawn): void {
 // Pick up energy from sources, tombstones, or the ground
 Creep.prototype.harvestEnergy = function (): void {
     const droppedResources: Resource = this.room.find(FIND_DROPPED_RESOURCES)[0]
-    const tombestone: Tombstone = this.room.find(FIND_TOMBSTONES)[0]
+    const tombstone: Tombstone = this.room.find(FIND_TOMBSTONES)[0]
+    const tombstoneHasEnergy: boolean = tombstone?.store.getUsedCapacity(RESOURCE_ENERGY) > 0 || false
 
     if (droppedResources) {
+        // If there are dropped resources in the room, get it
         if (this.pickup(droppedResources) === ERR_NOT_IN_RANGE) {
             this.moveTo(droppedResources, visOrange)
         }
-    } else if (tombestone) {
-        if(this.withdraw(tombestone, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-            this.moveTo(tombestone);
+    } else if (tombstoneHasEnergy) {
+        // If there's a tombstone out there with energy, get it
+        if (this.withdraw(tombstone, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+            this.moveTo(tombstone)
         }
     } else {
+        // Get energy from the nearest energy source
         const energySource: Source = this.room.find(FIND_SOURCES)[0]
         if (this.harvest(energySource) === ERR_NOT_IN_RANGE) {
             this.moveTo(energySource, visOrange)

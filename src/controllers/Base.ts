@@ -61,7 +61,7 @@ export default class Base {
 
     private save() {
         this.memory.controllerLevel = this.controllerLevel
-        this.memory.spawnQueue= this.spawnQueue
+        this.memory.spawnQueue = this.spawnQueue
     }
 
     private removeFromMemory(name: string, role: CreepRole) {

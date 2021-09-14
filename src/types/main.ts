@@ -1,4 +1,4 @@
-import { CensusRecords } from "controllers/Census";
+import { CensusRecords } from 'controllers/Census'
 
 export enum CreepRole {
     HARVESTER = 'HARVESTER',

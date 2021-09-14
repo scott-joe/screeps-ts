@@ -31,15 +31,15 @@ Creep.prototype.renew = function (spawn) {
 };
 Creep.prototype.harvestEnergy = function () {
     const droppedResources = this.room.find(FIND_DROPPED_RESOURCES)[0];
-    const tombestone = this.room.find(FIND_TOMBSTONES)[0];
+    const tombstone = this.room.find(FIND_TOMBSTONES)[0];
     if (droppedResources) {
         if (this.pickup(droppedResources) === ERR_NOT_IN_RANGE) {
             this.moveTo(droppedResources, visOrange);
         }
     }
-    else if (tombestone) {
-        if (this.withdraw(tombestone, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-            this.moveTo(tombestone);
+    else if ((tombstone === null || tombstone === void 0 ? void 0 : tombstone.store.getUsedCapacity(RESOURCE_ENERGY)) > 0) {
+        if (this.withdraw(tombstone, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+            this.moveTo(tombstone);
         }
     }
     else {
